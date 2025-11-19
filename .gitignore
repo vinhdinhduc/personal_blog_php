@@ -1,0 +1,40 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+/logs/
+
+# Uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Cache
+/cache/
+/tmp/
+
+# Database dumps
+*.sql
+*.sql.gz
+
+# Compiled assets
+/public/css/*.min.css
+/public/js/*.min.js
