@@ -1,9 +1,6 @@
 <?php
 
-/**
- * Login Page
- * File: src/app/views/auth/login.php
- */
+
 $page_title = "Đăng nhập";
 ?>
 

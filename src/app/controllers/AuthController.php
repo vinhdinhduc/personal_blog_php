@@ -1,12 +1,10 @@
 <?php
 
-/**
- * Auth Controller
- * Xử lý đăng ký, đăng nhập, đăng xuất
- */
+
 
 require_once __DIR__ . '/BaseController.php';
-require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../helpers/ToastHelper.php';
 
 class AuthController extends BaseController
 {
@@ -41,19 +39,19 @@ class AuthController extends BaseController
         }
 
         if (!$this->validateCSRF()) {
-            Session::flash('error', 'Invalid request');
+            Toast::error('Invalid request');
             $this->redirect('/register');
             return;
         }
 
         // Rate limiting
         if (!Security::rateLimit('register', 3, 3600)) {
-            Session::flash('error', 'Bạn đã đăng ký quá nhiều lần. Vui lòng thử lại sau 1 giờ');
+            Toast::error('Bạn đã đăng ký quá nhiều lần. Vui lòng thử lại sau 1 giờ');
             $this->redirect('/register');
             return;
         }
 
-        $userModel = new User();
+        $userModel = new UserModel();
 
         // Get input (lấy name từ trường "name")
         $data = [
@@ -66,25 +64,25 @@ class AuthController extends BaseController
 
         // Validate
         if (empty($data['fName']) || empty($data['lName']) || empty($data['email']) || empty($data['password'])) {
-            Session::flash('error', 'Vui lòng điền đầy đủ thông tin');
+            Toast::error('Vui lòng điền đầy đủ thông tin');
             $this->redirect('/register');
             return;
         }
 
         if (!Security::validateEmail($data['email'])) {
-            Session::flash('error', 'Email không hợp lệ');
+            Toast::error('Email không hợp lệ');
             $this->redirect('/register');
             return;
         }
 
         if ($data['password'] !== $data['password_confirm']) {
-            Session::flash('error', 'Mật khẩu xác nhận không khớp');
+            Toast::error('Mật khẩu xác nhận không khớp');
             $this->redirect('/register');
             return;
         }
 
         if (strlen($data['password']) < 6) {
-            Session::flash('error', 'Mật khẩu phải có ít nhất 6 ký tự');
+            Toast::error('Mật khẩu phải có ít nhất 6 ký tự');
             $this->redirect('/register');
             return;
         }
@@ -93,10 +91,13 @@ class AuthController extends BaseController
         $result = $userModel->register($data);
 
         if ($result['success']) {
-            Session::flash('success', 'Đăng ký thành công! Vui lòng đăng nhập');
+            Toast::success('Đăng ký thành công! Vui lòng đăng nhập');
+
             $this->redirect('/login');
         } else {
-            Session::flash('error', $result['message']);
+            Toast::error($result['message']);
+
+
             $this->redirect('/register');
         }
     }
@@ -131,7 +132,7 @@ class AuthController extends BaseController
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
-            Session::flash('error', 'Invalid request');
+            Toast::error('Invalid request');
             $this->redirect('/login');
             return;
         }
@@ -139,12 +140,12 @@ class AuthController extends BaseController
         // Rate limiting - chống brute force
         $rateLimitKey = 'login_' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
         if (!Security::rateLimit($rateLimitKey, 5, 300)) {
-            Session::flash('error', 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 5 phút');
+            Toast::error('Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 5 phút');
             $this->redirect('/login');
             return;
         }
 
-        $userModel = new User();
+        $userModel = new UserModel();
 
         $email = Security::sanitize($this->input('email'));
         $password = $this->input('password');
@@ -178,10 +179,11 @@ class AuthController extends BaseController
             }
 
             Session::remove('intended_url');
-            Session::flash('success', 'Đăng nhập thành công!');
+            Toast::success('Đăng nhập thành công!');
+
             $this->redirect($redirect);
         } else {
-            Session::flash('error', $result['message']);
+            Toast::error($result['message']);
             $this->redirect('/login');
         }
     }
@@ -198,7 +200,7 @@ class AuthController extends BaseController
         }
 
         Session::logout();
-        Session::flash('success', 'Đã đăng xuất');
+        Toast::success('Đã đăng xuất');
         $this->redirect('/');
     }
 

@@ -6,13 +6,44 @@
  */
 
 require_once __DIR__ . '/BaseController.php';
-require_once __DIR__ . '/../models/Post.php';
-require_once __DIR__ . '/../models/Category.php';
-require_once __DIR__ . '/../models/Tag.php';
-require_once __DIR__ . '/../models/Comment.php';
+require_once __DIR__ . '/../models/PostModel.php';
+require_once __DIR__ . '/../models/CategoryModel.php';
+require_once __DIR__ . '/../models/TagModel.php';
+require_once __DIR__ . '/../models/CommentModel.php';
+require_once __DIR__ . '/../helpers/ToastHelper.php';
 
 class PostController extends BaseController
 {
+
+    public function posts()
+    {
+        $this->requireAdmin();
+
+        $postModel = new PostModel();
+
+        $page = $this->input('page', 1);
+        $perPage = 20;
+
+        // Lấy filter parameters
+        $status = $this->input('status', '');
+        $search = $this->input('search', '');
+
+        // Get posts with details through Model
+        $posts = $postModel->getAllWithDetails($page, $perPage, $status, $search);
+        $totalPosts = $postModel->countAllWithDetails($status, $search);
+
+        $pagination = $this->paginate($totalPosts, $page, $perPage);
+
+        $this->viewWithLayout('admin/posts/posts', [
+            'posts' => $posts,
+            'pagination' => $pagination,
+            'totalPosts' => $totalPosts,
+            'currentStatus' => $status,
+            'searchKeyword' => $search,
+            'pageTitle' => 'Quản lý bài viết',
+            'csrfToken' => Security::generateCSRFToken()
+        ], 'layouts/admin_layout');
+    }
 
     /**
      * Hiển thị chi tiết bài viết
@@ -20,8 +51,8 @@ class PostController extends BaseController
      */
     public function show($slug)
     {
-        $postModel = new Post();
-        $commentModel = new Comment();
+        $postModel = new PostModel();
+        $commentModel = new CommentModel();
 
         $post = $postModel->getBySlug($slug);
 
@@ -69,8 +100,8 @@ class PostController extends BaseController
     {
         $this->requireAuth();
 
-        $categoryModel = new Category();
-        $tagModel = new Tag();
+        $categoryModel = new CategoryModel();
+        $tagModel = new TagModel();
 
         $this->viewWithLayout('post/create', [
             'categories' => $categoryModel->getAll(),
@@ -90,18 +121,19 @@ class PostController extends BaseController
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
+            Toast::error('Yêu cầu không hợp lệ');
             $this->redirect('/post/create');
             return;
         }
 
         // Rate limiting
         if (!Security::rateLimit('post_create', 5, 300)) {
-            Session::flash('error', 'Bạn đang tạo bài quá nhanh. Vui lòng chờ 5 phút');
+            Toast::warning('Bạn đang tạo bài quá nhanh. Vui lòng chờ 5 phút');
             $this->redirect('/post/create');
             return;
         }
 
-        $postModel = new Post();
+        $postModel = new PostModel();
 
         // Prepare data
         $data = [
@@ -118,13 +150,13 @@ class PostController extends BaseController
 
         // Validate
         if (empty($data['title'])) {
-            Session::flash('error', 'Tiêu đề không được để trống');
+            Toast::error('Tiêu đề không được để trống');
             $this->redirect('/post/create');
             return;
         }
 
         if (empty($data['content'])) {
-            Session::flash('error', 'Nội dung không được để trống');
+            Toast::error('Nội dung không được để trống');
             $this->redirect('/post/create');
             return;
         }
@@ -133,10 +165,10 @@ class PostController extends BaseController
         $result = $postModel->create($data);
 
         if ($result['success']) {
-            Session::flash('success', 'Tạo bài viết thành công!');
-            $this->redirect('/post/' . $result['slug']);
+            Toast::success('Tạo bài viết thành công!');
+            $this->redirect('/admin/posts');
         } else {
-            Session::flash('error', $result['message']);
+            Toast::error($result['message']);
             $this->redirect('/post/create');
         }
     }
@@ -149,7 +181,7 @@ class PostController extends BaseController
     {
         $this->requireAuth();
 
-        $postModel = new Post();
+        $postModel = new PostModel();
         $post = $postModel->getById($id);
 
         if (!$post) {
@@ -165,20 +197,20 @@ class PostController extends BaseController
             return;
         }
 
-        $categoryModel = new Category();
-        $tagModel = new Tag();
+        $categoryModel = new CategoryModel();
+        $tagModel = new TagModel();
 
         // Get selected tag IDs
         $selectedTags = array_column($post['tags'], 'id');
 
-        $this->viewWithLayout('post/edit', [
+        $this->viewWithLayout('admin/posts/post_edit', [
             'post' => $post,
             'categories' => $categoryModel->getAll(),
             'tags' => $tagModel->getAll(),
             'selectedTags' => $selectedTags,
             'pageTitle' => 'Sửa bài viết: ' . $post['title'],
             'csrfToken' => Security::generateCSRFToken()
-        ]);
+        ], "layouts/admin_layout");
     }
 
     /**
@@ -190,7 +222,7 @@ class PostController extends BaseController
         $this->requireAuth();
         $this->validateMethod('POST');
 
-        $postModel = new Post();
+        $postModel = new PostModel();
         $post = $postModel->getById($id);
 
         if (!$post) {
@@ -228,11 +260,11 @@ class PostController extends BaseController
         $result = $postModel->update($id, $data);
 
         if ($result['success']) {
-            Session::flash('success', 'Cập nhật bài viết thành công!');
-            $this->redirect('/post/' . $result['slug']);
+            Toast::success('Cập nhật bài viết thành công!');
+            $this->redirect('/admin/posts');
         } else {
-            Session::flash('error', $result['message']);
-            $this->redirect('/post/' . $id . '/edit');
+            Toast::error($result['message']);
+            $this->redirect('/posts/' . $id . '/edit');
         }
     }
 
@@ -251,7 +283,7 @@ class PostController extends BaseController
             return;
         }
 
-        $postModel = new Post();
+        $postModel = new PostModel();
         $post = $postModel->getById($id);
 
         if (!$post) {

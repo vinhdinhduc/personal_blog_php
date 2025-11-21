@@ -18,17 +18,20 @@ function requireFile(string $path)
 // Load core files
 requireFile(__DIR__ . '/src/app/routes/route.php');
 requireFile(__DIR__ . '/src/app/helpers/Session.php');
-requireFile(__DIR__ . '/src/app/helpers/Security.php');
+requireFile(__DIR__ . '/src/app/helpers/AutoLoad.php');
+// Start session
+Session::start();
 
 // Load controllers
 requireFile(__DIR__ . '/src/app/controllers/HomeController.php');
 requireFile(__DIR__ . '/src/app/controllers/AuthController.php');
 requireFile(__DIR__ . '/src/app/controllers/PostController.php');
-requireFile(__DIR__ . '/src/app/controllers/CommentController.php');
+requireFile(__DIR__ . '/src/app/controllers/CategoryController.php');
 requireFile(__DIR__ . '/src/app/controllers/AdminController.php');
+requireFile(__DIR__ . '/src/app/controllers/CommentController.php');
+requireFile(__DIR__ . '/src/app/controllers/UserController.php');
 
-// Start session
-Session::start();
+
 
 // Initialize router
 $router = new Router();

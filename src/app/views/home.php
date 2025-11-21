@@ -3,9 +3,9 @@
 
 
 
-$postModel = new Post();
-$categoryModel = new Category();
-$tagModel = new Tag();
+$postModel = new PostModel();
+$categoryModel = new CategoryModel();
+$tagModel = new TagModel();
 
 // Phân trang
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;

@@ -7,7 +7,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 
-class Comment
+class CommentModel
 {
     private $conn;
     private $table = 'comments';
@@ -449,5 +449,36 @@ class Comment
         $stmt->execute();
         $result = $stmt->fetch();
         return $result['total'];
+    }
+
+    /**
+     * Count comments by conditions
+     * @param array $conditions
+     * @return int
+     */
+    public function count($conditions = [])
+    {
+        $whereClauses = [];
+        $params = [];
+
+        foreach ($conditions as $key => $value) {
+            $whereClauses[] = "{$key} = :{$key}";
+            $params[":{$key}"] = $value;
+        }
+
+        $whereSQL = empty($whereClauses) ? '1=1' : implode(' AND ', $whereClauses);
+
+        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE {$whereSQL}";
+
+        $stmt = $this->conn->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        return (int)$result['total'];
     }
 }

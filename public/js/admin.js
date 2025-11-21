@@ -1,406 +1,341 @@
 /**
- * Admin Panel JavaScript
- * File: public/js/admin.js
- * Version: 1.0.0
- *
- * Xử lý các tương tác trong admin panel
+ * ADMIN.JS - Modern Admin Dashboard JavaScript
  */
 
-// ========================================
-// Initialize khi DOM loaded
-// ========================================
 document.addEventListener("DOMContentLoaded", function () {
-  initSidebarToggle();
-  initMobileMenu();
-  initTooltips();
-  initConfirmDialogs();
-  initAutoHideAlerts();
-  initTableRowHover();
-  initSearchAutocomplete();
-});
+  // ============================================
+  // SIDEBAR TOGGLE
+  // ============================================
+  const toggleBtn = document.querySelector(".header__toggle");
+  const sidebar = document.querySelector(".admin-sidebar");
 
-// ========================================
-// Sidebar Toggle
-// ========================================
-function initSidebarToggle() {
-  const sidebar = document.getElementById("sidebar");
-  const toggleBtn = document.getElementById("sidebarToggle");
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener("click", function () {
+      sidebar.classList.toggle("collapsed");
 
-  if (!sidebar || !toggleBtn) return;
-
-  // Load saved state từ localStorage
-  const savedState = localStorage.getItem("sidebarCollapsed");
-  if (savedState === "true") {
-    sidebar.classList.add("collapsed");
-  }
-
-  // Toggle khi click
-  toggleBtn.addEventListener("click", function () {
-    sidebar.classList.toggle("collapsed");
-
-    // Save state
-    const isCollapsed = sidebar.classList.contains("collapsed");
-    localStorage.setItem("sidebarCollapsed", isCollapsed);
-  });
-}
-
-// ========================================
-// Mobile Menu
-// ========================================
-function initMobileMenu() {
-  const sidebar = document.getElementById("sidebar");
-  const toggleBtn = document.getElementById("sidebarToggle");
-
-  if (window.innerWidth <= 768) {
-    // Close sidebar when clicking outside
-    document.addEventListener("click", function (e) {
-      if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-        sidebar.classList.remove("show");
-      }
+      // Save state to localStorage
+      const isCollapsed = sidebar.classList.contains("collapsed");
+      localStorage.setItem("sidebarCollapsed", isCollapsed);
     });
 
-    // Toggle sidebar on mobile
-    if (toggleBtn) {
-      toggleBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
+    // Load saved state
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    if (savedState === "true") {
+      sidebar.classList.add("collapsed");
+    }
+  }
+
+  // ============================================
+  // MOBILE SIDEBAR TOGGLE
+  // ============================================
+  if (window.innerWidth <= 768) {
+    if (toggleBtn && sidebar) {
+      toggleBtn.addEventListener("click", function () {
         sidebar.classList.toggle("show");
+      });
+
+      // Close sidebar when clicking outside
+      document.addEventListener("click", function (e) {
+        if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+          sidebar.classList.remove("show");
+        }
       });
     }
   }
-}
 
-// ========================================
-// Bootstrap Tooltips
-// ========================================
-function initTooltips() {
-  const tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  // ============================================
+  // ACTIVE MENU HIGHLIGHTING
+  // ============================================
+  const currentPath = window.location.pathname;
+  const menuLinks = document.querySelectorAll(".sidebar__menu-link");
+
+  menuLinks.forEach((link) => {
+    const linkPath = new URL(link.href).pathname;
+    if (currentPath === linkPath || currentPath.startsWith(linkPath + "/")) {
+      link.classList.add("active");
+    }
+  });
+
+  // ============================================
+  // CONFIRM DELETE
+  // ============================================
+  const deleteButtons = document.querySelectorAll(
+    '.btn-delete, [data-action="delete"]'
   );
 
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-}
-
-// ========================================
-// Confirm Delete Dialogs
-// ========================================
-function initConfirmDialogs() {
-  // Confirm delete buttons
-  document.querySelectorAll("[data-confirm]").forEach((button) => {
-    button.addEventListener("click", function (e) {
-      const message =
-        this.getAttribute("data-confirm") ||
-        "Are you sure you want to delete this item?";
-
-      if (!confirm(message)) {
+  deleteButtons.forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      if (!confirm("Bạn có chắc chắn muốn xóa?")) {
         e.preventDefault();
         return false;
       }
     });
   });
 
-  // Delete buttons với icon trash
-  document
-    .querySelectorAll('.btn-danger[title*="Delete"]')
-    .forEach((button) => {
-      button.addEventListener("click", function (e) {
-        if (!confirm("Bạn có chắc muốn xóa item này?")) {
-          e.preventDefault();
-          return false;
-        }
-      });
-    });
-}
-
-// ========================================
-// Auto Hide Alerts
-// ========================================
-function initAutoHideAlerts() {
-  const alerts = document.querySelectorAll(".alert:not(.alert-permanent)");
+  // ============================================
+  // AUTO HIDE ALERTS
+  // ============================================
+  const alerts = document.querySelectorAll(".alert");
 
   alerts.forEach((alert) => {
     setTimeout(() => {
-      const bsAlert = new bootstrap.Alert(alert);
-      bsAlert.close();
+      alert.style.opacity = "0";
+      setTimeout(() => {
+        alert.remove();
+      }, 300);
     }, 5000);
   });
-}
 
-// ========================================
-// Table Row Hover Effect
-// ========================================
-function initTableRowHover() {
-  document.querySelectorAll(".table tbody tr").forEach((row) => {
-    row.addEventListener("mouseenter", function () {
-      this.style.transform = "scale(1.01)";
-    });
+  // ============================================
+  // SEARCH FUNCTIONALITY
+  // ============================================
+  const searchInput = document.querySelector(".header__search-input");
 
-    row.addEventListener("mouseleave", function () {
-      this.style.transform = "scale(1)";
-    });
-  });
-}
-
-// ========================================
-// Search Autocomplete
-// ========================================
-function initSearchAutocomplete() {
-  const searchInput = document.getElementById("topbarSearch");
-
-  if (!searchInput) return;
-
-  let debounceTimer;
-
-  searchInput.addEventListener("input", function () {
-    clearTimeout(debounceTimer);
-
-    debounceTimer = setTimeout(() => {
-      const query = this.value.trim();
-
-      if (query.length >= 2) {
-        // TODO: Implement AJAX search
-        console.log("Searching for:", query);
+  if (searchInput) {
+    searchInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        const searchTerm = this.value.trim();
+        if (searchTerm) {
+          console.log("Searching for:", searchTerm);
+          // Implement your search logic here
+        }
       }
-    }, 300);
-  });
-}
+    });
+  }
 
-// ========================================
-// Select All Checkboxes
-// ========================================
-function initSelectAllCheckboxes() {
-  const selectAllCheckbox = document.querySelector(
-    'thead input[type="checkbox"]'
+  // ============================================
+  // TOOLTIP INITIALIZATION (if using)
+  // ============================================
+  const tooltipElements = document.querySelectorAll("[data-tooltip]");
+
+  tooltipElements.forEach((el) => {
+    el.addEventListener("mouseenter", function () {
+      const tooltipText = this.getAttribute("data-tooltip");
+      const tooltip = document.createElement("div");
+      tooltip.className = "tooltip";
+      tooltip.textContent = tooltipText;
+      document.body.appendChild(tooltip);
+
+      const rect = this.getBoundingClientRect();
+      tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + "px";
+      tooltip.style.left =
+        rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + "px";
+    });
+
+    el.addEventListener("mouseleave", function () {
+      const tooltip = document.querySelector(".tooltip");
+      if (tooltip) tooltip.remove();
+    });
+  });
+
+  // ============================================
+  // TABLE ROW ACTIONS
+  // ============================================
+  const tableRows = document.querySelectorAll(".table tbody tr");
+
+  tableRows.forEach((row) => {
+    row.addEventListener("click", function (e) {
+      // Don't trigger if clicking on a button or link
+      if (
+        e.target.tagName === "A" ||
+        e.target.tagName === "BUTTON" ||
+        e.target.closest("a") ||
+        e.target.closest("button")
+      ) {
+        return;
+      }
+
+      // Add selected class
+      tableRows.forEach((r) => r.classList.remove("selected"));
+      this.classList.add("selected");
+    });
+  });
+
+  // ============================================
+  // FORM VALIDATION
+  // ============================================
+  const forms = document.querySelectorAll("form[data-validate]");
+
+  forms.forEach((form) => {
+    form.addEventListener("submit", function (e) {
+      let isValid = true;
+      const requiredFields = form.querySelectorAll("[required]");
+
+      requiredFields.forEach((field) => {
+        if (!field.value.trim()) {
+          isValid = false;
+          field.classList.add("error");
+
+          // Show error message
+          let errorMsg = field.nextElementSibling;
+          if (!errorMsg || !errorMsg.classList.contains("error-message")) {
+            errorMsg = document.createElement("span");
+            errorMsg.className = "error-message";
+            errorMsg.textContent = "Trường này là bắt buộc";
+            errorMsg.style.color = "var(--danger-color)";
+            errorMsg.style.fontSize = "12px";
+            errorMsg.style.marginTop = "5px";
+            errorMsg.style.display = "block";
+            field.parentNode.insertBefore(errorMsg, field.nextSibling);
+          }
+        } else {
+          field.classList.remove("error");
+          const errorMsg = field.nextElementSibling;
+          if (errorMsg && errorMsg.classList.contains("error-message")) {
+            errorMsg.remove();
+          }
+        }
+      });
+
+      if (!isValid) {
+        e.preventDefault();
+        alert("Vui lòng điền đầy đủ các trường bắt buộc!");
+      }
+    });
+
+    // Remove error on input
+    form.querySelectorAll("[required]").forEach((field) => {
+      field.addEventListener("input", function () {
+        this.classList.remove("error");
+        const errorMsg = this.nextElementSibling;
+        if (errorMsg && errorMsg.classList.contains("error-message")) {
+          errorMsg.remove();
+        }
+      });
+    });
+  });
+
+  // ============================================
+  // NOTIFICATION BADGE ANIMATION
+  // ============================================
+  const notificationBadges = document.querySelectorAll(
+    ".header__notification-badge"
   );
 
-  if (!selectAllCheckbox) return;
-
-  selectAllCheckbox.addEventListener("change", function () {
-    const checkboxes = document.querySelectorAll(
-      'tbody input[type="checkbox"]'
-    );
-    checkboxes.forEach((checkbox) => {
-      checkbox.checked = this.checked;
-    });
-  });
-}
-
-// ========================================
-// Bulk Actions
-// ========================================
-function initBulkActions() {
-  const bulkActionForm = document.getElementById("bulkActionForm");
-
-  if (!bulkActionForm) return;
-
-  bulkActionForm.addEventListener("submit", function (e) {
-    const selectedItems = document.querySelectorAll(
-      'tbody input[type="checkbox"]:checked'
-    );
-
-    if (selectedItems.length === 0) {
-      e.preventDefault();
-      alert("Vui lòng chọn ít nhất một item");
-      return false;
+  notificationBadges.forEach((badge) => {
+    if (badge.textContent !== "0") {
+      badge.style.animation = "pulse 2s infinite";
     }
+  });
 
-    const action = document.querySelector('[name="bulk_action"]').value;
-
-    if (action === "delete") {
-      if (!confirm(`Xác nhận xóa ${selectedItems.length} items?`)) {
-        e.preventDefault();
-        return false;
+  // ============================================
+  // SMOOTH SCROLL
+  // ============================================
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
+      const targetId = this.getAttribute("href");
+      if (targetId !== "#") {
+        const target = document.querySelector(targetId);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
       }
-    }
+    });
   });
-}
 
-// ========================================
-// Image Preview for Upload
-// ========================================
-function previewImage(input, previewId) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
+  // ============================================
+  // IMAGE PREVIEW FOR FILE UPLOADS
+  // ============================================
+  const imageInputs = document.querySelectorAll(
+    'input[type="file"][accept*="image"]'
+  );
 
-    reader.onload = function (e) {
-      const preview = document.getElementById(previewId);
-      if (preview) {
-        preview.src = e.target.result;
-        preview.style.display = "block";
+  imageInputs.forEach((input) => {
+    input.addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          let preview = input.parentNode.querySelector(".image-preview");
+          if (!preview) {
+            preview = document.createElement("img");
+            preview.className = "image-preview";
+            preview.style.maxWidth = "200px";
+            preview.style.marginTop = "10px";
+            preview.style.borderRadius = "5px";
+            input.parentNode.appendChild(preview);
+          }
+          preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
       }
-    };
-
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-// ========================================
-// Auto-generate Slug from Title
-// ========================================
-function generateSlug(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
-}
-
-function initSlugGenerator() {
-  const titleInput = document.querySelector('input[name="title"]');
-  const slugInput = document.querySelector('input[name="slug"]');
-
-  if (!titleInput || !slugInput) return;
-
-  let manualEdit = false;
-
-  titleInput.addEventListener("input", function () {
-    if (!manualEdit) {
-      slugInput.value = generateSlug(this.value);
-    }
+    });
   });
 
-  slugInput.addEventListener("input", function () {
-    manualEdit = true;
-  });
-}
+  // ============================================
+  // RESPONSIVE TABLE
+  // ============================================
+  function makeTablesResponsive() {
+    const tables = document.querySelectorAll(".table");
 
-// ========================================
-// Rich Text Editor (TinyMCE)
-// ========================================
-function initRichTextEditor() {
-  if (typeof tinymce !== "undefined") {
-    tinymce.init({
-      selector: ".rich-text-editor",
-      height: 400,
-      menubar: false,
-      plugins: [
-        "advlist",
-        "autolink",
-        "lists",
-        "link",
-        "image",
-        "charmap",
-        "preview",
-        "anchor",
-        "searchreplace",
-        "visualblocks",
-        "code",
-        "fullscreen",
-        "insertdatetime",
-        "media",
-        "table",
-        "help",
-        "wordcount",
-      ],
-      toolbar:
-        "undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code",
-      content_style:
-        'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }',
-    });
-  }
-}
-
-// ========================================
-// AJAX Delete Function
-// ========================================
-async function deleteItem(url, confirmMessage = "Bạn có chắc muốn xóa?") {
-  if (!confirm(confirmMessage)) {
-    return false;
-  }
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-          ?.content,
-      },
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      showToast("Xóa thành công", "success");
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
-    } else {
-      showToast(data.message || "Xóa thất bại", "error");
+    if (window.innerWidth <= 768) {
+      tables.forEach((table) => {
+        if (!table.parentElement.classList.contains("table-responsive")) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "table-responsive";
+          wrapper.style.overflowX = "auto";
+          table.parentNode.insertBefore(wrapper, table);
+          wrapper.appendChild(table);
+        }
+      });
     }
-  } catch (error) {
-    console.error("Error:", error);
-    showToast("Có lỗi xảy ra", "error");
   }
-}
 
-// ========================================
-// Toast Notifications
-// ========================================
-function showToast(message, type = "info") {
-  const toast = document.createElement("div");
-  toast.className = `toast-notification toast-${type}`;
-  toast.innerHTML = `
-        <i class="fas fa-${getToastIcon(type)}"></i>
-        <span>${message}</span>
-    `;
+  makeTablesResponsive();
+  window.addEventListener("resize", makeTablesResponsive);
 
-  document.body.appendChild(toast);
+  // ============================================
+  // Sidebar Toggle (Additional)
+  // ============================================
+  const sidebarToggle = document.getElementById("sidebarToggle");
 
-  setTimeout(() => {
-    toast.classList.add("show");
-  }, 100);
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener("click", function () {
+      sidebar.classList.toggle("collapsed");
+    });
+  }
 
-  setTimeout(() => {
-    toast.classList.remove("show");
+  // Auto close alerts after 5 seconds
+  const flashAlerts = document.querySelectorAll('[id^="flash-message-"]');
+  flashAlerts.forEach((alert) => {
     setTimeout(() => {
-      toast.remove();
-    }, 300);
-  }, 3000);
-}
+      if (alert && alert.parentNode) {
+        alert.style.animation = "slideOut 0.3s ease-out";
+        setTimeout(() => alert.remove(), 300);
+      }
+    }, 5000);
+  });
+});
 
-function getToastIcon(type) {
-  const icons = {
-    success: "check-circle",
-    error: "exclamation-circle",
-    warning: "exclamation-triangle",
-    info: "info-circle",
-  };
-  return icons[type] || "info-circle";
-}
-
-// ========================================
-// Loading Overlay
-// ========================================
-function showLoading() {
-  const overlay = document.createElement("div");
-  overlay.id = "loadingOverlay";
-  overlay.className = "loading-overlay";
-  overlay.innerHTML = `
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    `;
-  document.body.appendChild(overlay);
-}
-
-function hideLoading() {
-  const overlay = document.getElementById("loadingOverlay");
-  if (overlay) {
-    overlay.remove();
+// Close alert function
+function closeAlert(alertId) {
+  const alert = document.getElementById(alertId);
+  if (alert) {
+    alert.style.animation = "slideOut 0.3s ease-out";
+    setTimeout(() => alert.remove(), 300);
   }
 }
 
-// ========================================
-// Export Functions
-// ========================================
-window.adminJS = {
-  deleteItem,
-  showToast,
-  showLoading,
-  hideLoading,
-  generateSlug,
-  previewImage,
-};
+// ============================================
+// CSS ANIMATION KEYFRAMES (Add to CSS if needed)
+// ============================================
+const style = document.createElement("style");
+style.textContent = `
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .table tbody tr.selected {
+        background: rgba(78, 115, 223, 0.1);
+    }
+    
+    .form-control.error {
+        border-color: var(--danger-color);
+    }
+`;
+document.head.appendChild(style);

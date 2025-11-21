@@ -8,7 +8,7 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../helpers/Security.php';
 
-class Post
+class PostModel
 {
     private $conn;
     private $table = 'posts';
@@ -565,5 +565,136 @@ class Post
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Count posts by conditions
+     * @param array $conditions
+     * @return int
+     */
+    public function count($conditions = [])
+    {
+        $whereClauses = [];
+        $params = [];
+
+        foreach ($conditions as $key => $value) {
+            $whereClauses[] = "{$key} = :{$key}";
+            $params[":{$key}"] = $value;
+        }
+
+        $whereSQL = empty($whereClauses) ? '1=1' : implode(' AND ', $whereClauses);
+
+        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE {$whereSQL}";
+
+        $stmt = $this->conn->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        return (int)$result['total'];
+    }
+
+    /**
+     * Lấy tất cả bài viết với details (cho admin)
+     * @param int $page
+     * @param int $perPage
+     * @param string $status Filter theo status (optional)
+     * @param string $search Tìm kiếm (optional)
+     * @return array
+     */
+    public function getAllWithDetails($page = 1, $perPage = 20, $status = '', $search = '')
+    {
+        $offset = ($page - 1) * $perPage;
+
+        $whereClauses = [];
+        $params = [];
+
+        // Filter by status
+        if (!empty($status)) {
+            $whereClauses[] = "p.status = :status";
+            $params[':status'] = $status;
+        }
+
+        // Search
+        if (!empty($search)) {
+            $whereClauses[] = "(p.title LIKE :search OR p.content LIKE :search OR p.excerpt LIKE :search)";
+            $params[':search'] = "%{$search}%";
+        }
+
+        $whereSQL = empty($whereClauses) ? '1=1' : implode(' AND ', $whereClauses);
+
+        $query = "SELECT p.*, 
+                         CONCAT(u.first_name, ' ', u.last_name) as author_name,
+                         u.email as author_email,
+                         c.name as category_name,
+                         c.slug as category_slug,
+                         COUNT(DISTINCT cm.id) as comment_count,
+                         GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags_list
+                  FROM {$this->table} p
+                  LEFT JOIN users u ON p.user_id = u.id
+                  LEFT JOIN categories c ON p.category_id = c.id
+                  LEFT JOIN comments cm ON p.id = cm.post_id
+                  LEFT JOIN post_tag pt ON p.id = pt.post_id
+                  LEFT JOIN tags t ON pt.tag_id = t.id
+                  WHERE {$whereSQL}
+                  GROUP BY p.id
+                  ORDER BY p.created_at DESC
+                  LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($query);
+
+        // Bind search/filter params
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        // Bind pagination params
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Đếm tất cả bài viết với filter (cho admin)
+     * @param string $status
+     * @param string $search
+     * @return int
+     */
+    public function countAllWithDetails($status = '', $search = '')
+    {
+        $whereClauses = [];
+        $params = [];
+
+        if (!empty($status)) {
+            $whereClauses[] = "status = :status";
+            $params[':status'] = $status;
+        }
+
+        if (!empty($search)) {
+            $whereClauses[] = "(title LIKE :search OR content LIKE :search OR excerpt LIKE :search)";
+            $params[':search'] = "%{$search}%";
+        }
+
+        $whereSQL = empty($whereClauses) ? '1=1' : implode(' AND ', $whereClauses);
+
+        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE {$whereSQL}";
+
+        $stmt = $this->conn->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        return (int)$result['total'];
     }
 }

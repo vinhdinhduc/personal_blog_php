@@ -1,192 +1,135 @@
-<?php
-
-/**
- * Admin Dashboard View
- * File: app/views/admin/dashboard.php
- * 
- * Trang dashboard với thống kê tổng quan
- */
-
-// Dữ liệu mẫu - thay bằng dữ liệu thực từ database
-$stats = [
-    'total_posts' => 245,
-    'total_users' => 1245,
-    'total_comments' => 3456,
-    'total_views' => 45678
-];
-
-// Recent posts mẫu
-$recentPosts = [
-    ['id' => 1, 'title' => 'Getting Started with PHP', 'author' => 'John Doe', 'status' => 'published', 'date' => '2024-01-15'],
-    ['id' => 2, 'title' => 'MySQL Database Tutorial', 'author' => 'Jane Smith', 'status' => 'draft', 'date' => '2024-01-14'],
-    ['id' => 3, 'title' => 'JavaScript ES6 Features', 'author' => 'Mike Johnson', 'status' => 'published', 'date' => '2024-01-13'],
-];
-?>
-
 <!-- Page Header -->
-<div class="page-header">
-    <h1 class="page-title">Dashboard</h1>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/admin">Home</a></li>
-            <li class="breadcrumb-item active">Dashboard</li>
-        </ol>
-    </nav>
+<div class="content__header">
+    <h1 class="content__title">Dashboard</h1>
+    <div class="content__breadcrumb">
+        <a href="<?php echo Router::url('/admin'); ?>" class="content__breadcrumb-item">Admin</a>
+        <span>/</span>
+        <span class="content__breadcrumb-item">Dashboard</span>
+    </div>
 </div>
 
-<!-- Stats Cards -->
-<div class="stats-grid">
+<!-- Statistics Cards -->
+<div class="card-grid">
     <!-- Total Posts -->
-    <div class="stat-card">
-        <div class="stat-icon primary">
-            <i class="fas fa-file-alt"></i>
+    <div class="card">
+        <div class="card__header">
+            <div>
+                <h3 class="card__title">Tổng bài viết</h3>
+                <div class="card__value"><?php echo $stats['total_posts'] ?? 0; ?></div>
+            </div>
+            <div class="card__icon card__icon--primary">
+                <i class="fas fa-newspaper"></i>
+            </div>
         </div>
-        <div class="stat-info">
-            <h3><?php echo number_format($stats['total_posts']); ?></h3>
-            <p>Total Posts</p>
+        <div class="card__footer">
+            <i class="fas fa-arrow-up" style="color: var(--success-color);"></i>
+            <span>12% tăng so với tháng trước</span>
         </div>
     </div>
 
     <!-- Total Users -->
-    <div class="stat-card">
-        <div class="stat-icon success">
-            <i class="fas fa-users"></i>
+    <div class="card">
+        <div class="card__header">
+            <div>
+                <h3 class="card__title">Người dùng</h3>
+                <div class="card__value"><?php echo $stats['total_users'] ?? 0; ?></div>
+            </div>
+            <div class="card__icon card__icon--success">
+                <i class="fas fa-users"></i>
+            </div>
         </div>
-        <div class="stat-info">
-            <h3><?php echo number_format($stats['total_users']); ?></h3>
-            <p>Total Users</p>
+        <div class="card__footer">
+            <i class="fas fa-arrow-up" style="color: var(--success-color);"></i>
+            <span>8% tăng so với tháng trước</span>
         </div>
     </div>
 
     <!-- Total Comments -->
-    <div class="stat-card">
-        <div class="stat-icon warning">
-            <i class="fas fa-comments"></i>
+    <div class="card">
+        <div class="card__header">
+            <div>
+                <h3 class="card__title">Bình luận</h3>
+                <div class="card__value"><?php echo $stats['total_comments'] ?? 0; ?></div>
+            </div>
+            <div class="card__icon card__icon--info">
+                <i class="fas fa-comments"></i>
+            </div>
         </div>
-        <div class="stat-info">
-            <h3><?php echo number_format($stats['total_comments']); ?></h3>
-            <p>Total Comments</p>
+        <div class="card__footer">
+            <i class="fas fa-arrow-up" style="color: var(--success-color);"></i>
+            <span>25% tăng so với tháng trước</span>
         </div>
     </div>
 
-    <!-- Total Views -->
-    <div class="stat-card">
-        <div class="stat-icon info">
-            <i class="fas fa-eye"></i>
+    <!-- Pending Approval -->
+    <div class="card">
+        <div class="card__header">
+            <div>
+                <h3 class="card__title">Chờ duyệt</h3>
+                <div class="card__value"><?php echo $stats['pending_comments'] ?? 0; ?></div>
+            </div>
+            <div class="card__icon card__icon--warning">
+                <i class="fas fa-clock"></i>
+            </div>
         </div>
-        <div class="stat-info">
-            <h3><?php echo number_format($stats['total_views']); ?></h3>
-            <p>Total Views</p>
+        <div class="card__footer">
+            <i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i>
+            <span>Cần xử lý</span>
         </div>
     </div>
 </div>
 
 <!-- Recent Posts -->
-<div class="content-card">
-    <div class="card-header">
-        <h2 class="card-title">Recent Posts</h2>
-        <a href="/admin/posts" class="btn btn-primary btn-sm">View All</a>
+<div class="table-container">
+    <div class="table-container__header">
+        <h2 class="table-container__title">Bài viết gần đây</h2>
+        <a href="<?php echo Router::url('/admin/posts'); ?>" class="btn btn--primary btn--sm">
+            <i class="fas fa-eye"></i>
+            Xem tất cả
+        </a>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tiêu đề</th>
+                <th>Tác giả</th>
+                <th>Danh mục</th>
+                <th>Ngày tạo</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($recentPosts)): ?>
+                <?php foreach ($recentPosts as $post): ?>
                     <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Actions</th>
+                        <td><?php echo $post['id']; ?></td>
+                        <td><?php echo htmlspecialchars($post['title']); ?></td>
+                        <td><?php echo htmlspecialchars($post['author_name'] ?? 'N/A'); ?></td>
+                        <td><?php echo htmlspecialchars($post['category_name'] ?? 'N/A'); ?></td>
+                        <td><?php echo date('d/m/Y', strtotime($post['created_at'])); ?></td>
+                        <td>
+                            <span class="badge badge--<?php echo $post['status'] === 'published' ? 'success' : 'warning'; ?>">
+                                <?php echo $post['status'] === 'published' ? 'Đã xuất bản' : 'Nháp'; ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="<?php echo Router::url('/admin/posts/edit/' . $post['id']); ?>" class="btn btn--sm btn--primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($recentPosts as $post): ?>
-                        <tr>
-                            <td>#<?php echo str_pad($post['id'], 3, '0', STR_PAD_LEFT); ?></td>
-                            <td class="fw-bold"><?php echo htmlspecialchars($post['title']); ?></td>
-                            <td><?php echo htmlspecialchars($post['author']); ?></td>
-                            <td>
-                                <?php if ($post['status'] === 'published'): ?>
-                                    <span class="badge badge-published">Published</span>
-                                <?php else: ?>
-                                    <span class="badge badge-draft">Draft</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?php echo date('d/m/Y', strtotime($post['date'])); ?></td>
-                            <td>
-                                <a href="/admin/posts/<?php echo $post['id']; ?>"
-                                    class="btn btn-secondary btn-icon btn-sm"
-                                    title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="/admin/posts/<?php echo $post['id']; ?>/edit"
-                                    class="btn btn-success btn-icon btn-sm"
-                                    title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button onclick="adminJS.deleteItem('/admin/posts/<?php echo $post['id']; ?>/delete')"
-                                    class="btn btn-danger btn-icon btn-sm"
-                                    title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="content-card">
-            <div class="card-header">
-                <h2 class="card-title">Quick Actions</h2>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="/admin/posts/create" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i> Create New Post
-                    </a>
-                    <a href="/admin/categories" class="btn btn-secondary">
-                        <i class="fas fa-folder me-2"></i> Manage Categories
-                    </a>
-                    <a href="/admin/users" class="btn btn-info">
-                        <i class="fas fa-users me-2"></i> Manage Users
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="content-card">
-            <div class="card-header">
-                <h2 class="card-title">System Info</h2>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <i class="fas fa-server text-primary me-2"></i>
-                        <strong>PHP Version:</strong> <?php echo PHP_VERSION; ?>
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-database text-success me-2"></i>
-                        <strong>Database:</strong> MySQL 8.0
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-hdd text-warning me-2"></i>
-                        <strong>Disk Space:</strong> 45GB / 100GB
-                    </li>
-                    <li>
-                        <i class="fas fa-clock text-info me-2"></i>
-                        <strong>Last Backup:</strong> 2024-01-15 10:30 AM
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
+                        <p style="margin-top: 15px; color: var(--secondary-color);">Chưa có bài viết nào</p>
+                    </td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>

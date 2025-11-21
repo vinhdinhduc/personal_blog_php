@@ -6,7 +6,7 @@
 <header class="header" id="header">
     <div class="header-container">
         <a href="<?php echo Router::url('/'); ?>" class="logo">
-            <img src="<?php echo Router::url('uploads/blog_logo.png'); ?>"
+            <img src="<?php echo Router::url('uploads/logo.png'); ?>"
                 alt="BlogIT"
                 class="logo__image" />
 

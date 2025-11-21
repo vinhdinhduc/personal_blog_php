@@ -1,5 +1,5 @@
 <?php
-// Flash messages đã được xử lý trong layout-auth.php, không cần ở đây nữa
+ 
 ?>
 <div class="auth">
     <div class="auth__container">

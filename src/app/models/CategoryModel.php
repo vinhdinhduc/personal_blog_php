@@ -7,7 +7,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 
-class Category
+class CategoryModel
 {
     private $conn;
     private $table = 'categories';

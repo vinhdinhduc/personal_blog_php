@@ -1,0 +1,297 @@
+/**
+ * Toast Notification Component
+ * File: public/assets/css/toast.css
+ * Version: 1.0.0
+ */
+
+/* ==========================================================================
+   Toast Container
+   ========================================================================== */
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Toast Component
+   ========================================================================== */
+
+.toast {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 320px;
+    max-width: 400px;
+    pointer-events: auto;
+    transform: translateX(calc(100% + 40px));
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.toast.toast--show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.toast--hide {
+    transform: translateX(calc(100% + 40px));
+    opacity: 0;
+}
+
+/* Toast Border Left Accent */
+.toast::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+/* ==========================================================================
+   Toast Icon
+   ========================================================================== */
+
+.toast__icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   Toast Content
+   ========================================================================== */
+
+.toast__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.toast__title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.toast__message {
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0.85;
+    margin: 0;
+}
+
+/* ==========================================================================
+   Toast Close Button
+   ========================================================================== */
+
+.toast__close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 6px;
+    color: inherit;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.toast__close:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   Toast Progress Bar
+   ========================================================================== */
+
+.toast__progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: currentColor;
+    opacity: 0.3;
+    transform-origin: left;
+    animation: toast-progress linear forwards;
+}
+
+@keyframes toast-progress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* ==========================================================================
+   Toast Variants
+   ========================================================================== */
+
+/* Success Toast */
+.toast--success {
+    color: #065f46;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border: 1px solid #6ee7b7;
+}
+
+.toast--success::before {
+    background: #10b981;
+}
+
+.toast--success .toast__icon {
+    background: #10b981;
+    color: white;
+}
+
+.toast--success .toast__progress {
+    color: #10b981;
+}
+
+/* Error Toast */
+.toast--error {
+    color: #991b1b;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 1px solid #fca5a5;
+}
+
+.toast--error::before {
+    background: #ef4444;
+}
+
+.toast--error .toast__icon {
+    background: #ef4444;
+    color: white;
+}
+
+.toast--error .toast__progress {
+    color: #ef4444;
+}
+
+/* Warning Toast */
+.toast--warning {
+    color: #92400e;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #fcd34d;
+}
+
+.toast--warning::before {
+    background: #f59e0b;
+}
+
+.toast--warning .toast__icon {
+    background: #f59e0b;
+    color: white;
+}
+
+.toast--warning .toast__progress {
+    color: #f59e0b;
+}
+
+/* Info Toast */
+.toast--info {
+    color: #1e40af;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 1px solid #93c5fd;
+}
+
+.toast--info::before {
+    background: #3b82f6;
+}
+
+.toast--info .toast__icon {
+    background: #3b82f6;
+    color: white;
+}
+
+.toast--info .toast__progress {
+    color: #3b82f6;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 640px) {
+    .toast-container {
+        left: 10px;
+        right: 10px;
+        top: 10px;
+        max-width: none;
+    }
+
+    .toast {
+        min-width: auto;
+        max-width: none;
+        width: 100%;
+    }
+}
+
+/* ==========================================================================
+   Position Variants (Optional)
+   ========================================================================== */
+
+.toast-container--top-left {
+    top: 20px;
+    left: 20px;
+    right: auto;
+}
+
+.toast-container--top-center {
+    top: 20px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}
+
+.toast-container--bottom-right {
+    top: auto;
+    bottom: 20px;
+    right: 20px;
+}
+
+.toast-container--bottom-left {
+    top: auto;
+    bottom: 20px;
+    left: 20px;
+    right: auto;
+}
+
+.toast-container--bottom-center {
+    top: auto;
+    bottom: 20px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}

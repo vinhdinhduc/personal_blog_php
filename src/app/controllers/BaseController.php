@@ -102,6 +102,7 @@ class BaseController
         // Bước 2: Kiểm tra role
         if (!Session::isAdmin()) {
             Session::flash('error', 'Bạn không có quyền truy cập trang này.');
+
             $this->redirect($redirectTo);
             exit;
         }
@@ -239,5 +240,23 @@ class BaseController
             'has_prev' => $page > 1,
             'has_next' => $page < $totalPages
         ];
+    }
+
+    /**
+     * Hiển thị trang 404
+     */
+    protected function notFound($message = '404 - Không tìm thấy trang')
+    {
+        error_log('404 Not Found: ' . $_SERVER['REQUEST_URI']);
+        error_log('Request Method: ' . $_SERVER['REQUEST_METHOD']);
+        error_log('Current User: ' . Session::getUserId());
+        error_log('Session Data: ' . print_r($_SESSION, true));
+
+        http_response_code(404);
+        $this->view('errors/404', [
+            'message' => $message,
+            'pageTitle' => '404 - Không tìm thấy trang'
+        ]);
+        exit;
     }
 }

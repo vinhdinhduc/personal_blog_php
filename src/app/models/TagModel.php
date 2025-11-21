@@ -7,7 +7,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 
-class Tag
+class TagModel
 {
     private $conn;
     private $table = 'tags';

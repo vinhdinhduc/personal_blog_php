@@ -6,8 +6,8 @@
  */
 
 require_once __DIR__ . '/BaseController.php';
-require_once __DIR__ . '/../models/Comment.php';
-require_once __DIR__ . '/../models/Post.php';
+require_once __DIR__ . '/../models/CommentModel.php';
+require_once __DIR__ . '/../models/PostModel.php';
 
 class CommentController extends BaseController
 {
@@ -44,8 +44,8 @@ class CommentController extends BaseController
             return;
         }
 
-        $commentModel = new Comment();
-        $postModel = new Post();
+        $commentModel = new CommentModel();
+        $postModel = new PostModel();
 
         // Get input
         $postId = (int)$this->input('post_id');
@@ -183,7 +183,7 @@ class CommentController extends BaseController
         $this->requireAuth();
         $this->validateMethod('POST');
 
-        $commentModel = new Comment();
+        $commentModel = new CommentModel();
         $comment = $commentModel->getById($id);
 
         if (!$comment) {
@@ -232,7 +232,7 @@ class CommentController extends BaseController
         $this->requireAuth();
         $this->validateMethod('POST');
 
-        $commentModel = new Comment();
+        $commentModel = new CommentModel();
         $comment = $commentModel->getById($id);
 
         if (!$comment) {
@@ -280,7 +280,7 @@ class CommentController extends BaseController
         $this->requireAuth();
         $this->validateMethod('POST');
 
-        $commentModel = new Comment();
+        $commentModel = new CommentModel();
         $comment = $commentModel->getById($id);
 
         if (!$comment) {
@@ -317,7 +317,7 @@ class CommentController extends BaseController
         $this->requireAuth();
         $this->validateMethod('POST');
 
-        $commentModel = new Comment();
+        $commentModel = new CommentModel();
         $comment = $commentModel->getById($id);
 
         if (!$comment) {
@@ -351,12 +351,12 @@ class CommentController extends BaseController
      */
     public function getByPost($postId)
     {
-        $commentModel = new Comment();
+        $commentModel = new CommentModel();
 
         // Kiểm tra có show unapproved comments không (cho admin/author)
         $includeUnapproved = false;
         if (Session::isLoggedIn()) {
-            $postModel = new Post();
+            $postModel = new PostModel();
             $post = $postModel->getById($postId);
             if ($post && (Session::isAdmin() || Session::getUserId() == $post['user_id'])) {
                 $includeUnapproved = true;
@@ -390,7 +390,7 @@ class CommentController extends BaseController
      */
     private function canDelete($comment)
     {
-        $commentModel = new Comment();
+        $commentModel = new CommentModel();
 
         // Admin có thể delete tất cả
         if (Session::isAdmin()) {
@@ -417,7 +417,7 @@ class CommentController extends BaseController
      */
     private function canApprove($comment)
     {
-        $commentModel = new Comment();
+        $commentModel = new CommentModel();
 
         // Admin có thể approve tất cả
         if (Session::isAdmin()) {
