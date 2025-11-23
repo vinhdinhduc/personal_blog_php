@@ -243,7 +243,7 @@ class AuthController extends BaseController
         $token = $_COOKIE['remember_token'];
         $hashedToken = hash('sha256', $token);
 
-        $userModel = new User();
+        $userModel = new UserModel();
 
         if ($userModel->verifyRememberToken($userId, $hashedToken)) {
             $user = $userModel->getUserById($userId);

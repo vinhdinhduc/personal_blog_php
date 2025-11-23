@@ -10,7 +10,7 @@
 
 <!-- Action Buttons -->
 <div style="margin-bottom: 20px;">
-    <a href="/admin/posts/add" class="btn btn--primary">
+    <a href=<?php echo Router::url('/admin/posts/add') ?> class="btn btn--primary">
         <i class="fas fa-plus"></i>
         Thêm bài viết mới
     </a>
@@ -68,9 +68,9 @@
                         </td>
                         <td><?= $post['id'] ?></td>
                         <td>
-                            <?php if (!empty($post['thumbnail'])): ?>
-                                <img src="<?= htmlspecialchars($post['thumbnail']) ?>"
-                                    alt="Thumbnail"
+                            <?php if (!empty($post['cover_image'])): ?>
+                                <img src="<?= Router::url() . "public/" . htmlspecialchars($post['cover_image']) ?>"
+                                    alt="cover image"
                                     style="width: 60px; height: 40px; object-fit: cover; border-radius: 5px;">
                             <?php else: ?>
                                 <div style="width: 60px; height: 40px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
@@ -111,15 +111,20 @@
                             <?php endif; ?>
                         </td>
                         <td>
-                            <a href=<?php echo Router::url("/posts/{$post['slug']}") ?> target="_blank" class="btn btn--info btn--sm" data-tooltip="Xem bài viết">
+                            <a href="<?= Router::url("/posts/{$post['slug']}") ?>" target="_blank" class="btn btn--info btn--sm" data-tooltip="Xem bài viết">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href=<?php echo Router::url("/admin/posts/edit/{$post['id']}") ?> class="btn btn--warning btn--sm" data-tooltip="Sửa">
+                            <a href="<?= Router::url("/admin/posts/edit/{$post['id']}") ?>" class="btn btn--warning btn--sm" data-tooltip="Sửa">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href=<?php echo Router::url("/admin/posts/delete/{$post['id']}") ?> class="btn btn--danger btn--sm btn-delete" data-tooltip="Xóa">
+
+                            <!-- ✅ SỬA: Dùng button với onclick -->
+                            <button type="button"
+                                class="btn btn--danger btn--sm"
+                                data-tooltip="Xóa"
+                                onclick="deletePost(<?= $post['id'] ?>, '<?= htmlspecialchars($post['title']) ?>')">
                                 <i class="fas fa-trash"></i>
-                            </a>
+                            </button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -171,7 +176,21 @@
     <?php endif; ?>
 </div>
 
+<!-- ✅ THÊM: Hidden form để delete -->
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+</form>
+
 <script>
+    // ✅ THÊM: Delete function
+    function deletePost(postId, postTitle) {
+        if (confirm(`Bạn có chắc chắn muốn xóa bài viết "${postTitle}"?\n\nHành động này không thể hoàn tác!`)) {
+            const form = document.getElementById('deleteForm');
+            form.action = '<?= Router::url("/admin/posts/delete/") ?>' + postId;
+            form.submit();
+        }
+    }
+
     // Select all checkboxes
     document.getElementById('selectAll')?.addEventListener('change', function() {
         document.querySelectorAll('.post-checkbox').forEach(checkbox => {

@@ -68,7 +68,7 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                             <article class="post-card">
                                 <div class="post-image">
                                     <a href="post.php?slug=<?php echo $post['slug']; ?>">
-                                        <img src="<?php echo $post['cover_image'] ?? 'assets/images/default-post.jpg'; ?>"
+                                        <img src="<?php echo Router::url() . "public/" . ($post['cover_image'] ?? 'assets/images/default-post.jpg'); ?>"
                                             alt="<?php echo htmlspecialchars($post['title']); ?>">
                                     </a>
                                     <?php if ($post['category_name']): ?>

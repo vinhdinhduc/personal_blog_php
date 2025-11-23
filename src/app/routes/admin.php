@@ -15,19 +15,18 @@ function registerAdminRoutes(Router $router)
 
 
     // Danh sách bài viết
-
     $router->get('/admin/posts', function () {
         $controller = new PostController();
         $controller->posts();
     });
 
     // Tạo bài viết mới
-    $router->get('/admin/posts/create', function () {
+    $router->get('/admin/posts/add', function () {
         $controller = new PostController();
         $controller->showCreate();
     });
 
-    $router->post('/admin/posts/create', function () {
+    $router->post('/admin/posts/store', function () {
         $controller = new PostController();
         $controller->create();
     });
@@ -38,7 +37,7 @@ function registerAdminRoutes(Router $router)
         $controller->showEdit($params['id']);
     });
 
-    $router->post('/admin/posts/edit/{id}', function ($params) {
+    $router->post('/admin/posts/update/{id}', function ($params) {
         $controller = new PostController();
         $controller->update($params['id']);
     });

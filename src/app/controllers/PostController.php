@@ -103,12 +103,14 @@ class PostController extends BaseController
         $categoryModel = new CategoryModel();
         $tagModel = new TagModel();
 
-        $this->viewWithLayout('post/create', [
+        $this->viewWithLayout('admin/posts/post_add', [
             'categories' => $categoryModel->getAll(),
             'tags' => $tagModel->getAll(),
             'pageTitle' => 'Tạo bài viết mới',
-            'csrfToken' => Security::generateCSRFToken()
-        ]);
+            'csrfToken' => Security::generateCSRFToken(),
+            "needPostEdit" => true
+
+        ], "layouts/admin_layout");
     }
 
     /**
@@ -119,21 +121,60 @@ class PostController extends BaseController
         $this->requireAuth();
         $this->validateMethod('POST');
 
+        // ✅ DEBUG: Log FILES
+        error_log("=== FILES DATA ===");
+        error_log("FILES: " . print_r($_FILES, true));
+
         // Validate CSRF
         if (!$this->validateCSRF()) {
             Toast::error('Yêu cầu không hợp lệ');
-            $this->redirect('/post/create');
+            $this->redirect('/admin/posts/create');
             return;
         }
 
         // Rate limiting
         if (!Security::rateLimit('post_create', 5, 300)) {
             Toast::warning('Bạn đang tạo bài quá nhanh. Vui lòng chờ 5 phút');
-            $this->redirect('/post/create');
+            $this->redirect('/admin/posts/create');
             return;
         }
 
         $postModel = new PostModel();
+
+        // ✅ XỬ LÝ UPLOAD ẢNH ĐÚNG
+        $coverImage = null;
+
+        // Kiểm tra có file upload không
+        if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            error_log("Cover image file detected");
+            error_log("File error code: " . $_FILES['cover_image']['error']);
+
+            if ($_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
+                $uploadResult = $this->uploadFile('cover_image', 'uploads/posts/');
+
+                if ($uploadResult['success']) {
+                    $coverImage = $uploadResult['path'];
+                    error_log("✅ Image uploaded: " . $coverImage);
+                } else {
+                    error_log("❌ Image upload failed: " . $uploadResult['message']);
+                    // Không return, tiếp tục tạo post không có ảnh
+                }
+            } else {
+                $errorMessages = [
+                    UPLOAD_ERR_INI_SIZE => 'File quá lớn (vượt quá upload_max_filesize)',
+                    UPLOAD_ERR_FORM_SIZE => 'File quá lớn (vượt quá MAX_FILE_SIZE)',
+                    UPLOAD_ERR_PARTIAL => 'File chỉ được upload một phần',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Thiếu thư mục tmp',
+                    UPLOAD_ERR_CANT_WRITE => 'Không thể ghi file',
+                    UPLOAD_ERR_EXTENSION => 'Upload bị chặn bởi extension'
+                ];
+
+                $errorMsg = $errorMessages[$_FILES['cover_image']['error']] ?? 'Lỗi upload không xác định';
+                error_log("❌ Upload error: " . $errorMsg);
+            }
+        } else {
+            error_log("No cover image file uploaded");
+        }
 
         // Prepare data
         $data = [
@@ -142,34 +183,39 @@ class PostController extends BaseController
             'title' => Security::sanitize($this->input('title')),
             'slug' => $this->input('slug') ? Security::createSlug($this->input('slug')) : '',
             'excerpt' => Security::sanitize($this->input('excerpt')),
-            'content' => $this->input('content'), // Rich text - không sanitize
-            'cover_image' => $this->input('cover_image'),
+            'content' => $this->input('content'),
+            'cover_image' => $coverImage, // Có thể null
             'status' => $this->input('status', 'draft'),
             'tags' => $this->input('tags', [])
         ];
 
+        error_log("Data to create: " . print_r($data, true));
+
         // Validate
         if (empty($data['title'])) {
             Toast::error('Tiêu đề không được để trống');
-            $this->redirect('/post/create');
+            $this->redirect('/admin/posts/create');
             return;
         }
 
-        if (empty($data['content'])) {
+        if (empty($data['content']) || trim($data['content']) === '' || $data['content'] === '<p><br></p>') {
+            error_log("❌ Content validation failed!");
             Toast::error('Nội dung không được để trống');
-            $this->redirect('/post/create');
+            $this->redirect('/admin/posts/create');
             return;
         }
 
         // Create post
         $result = $postModel->create($data);
 
+        error_log("Post create result: " . print_r($result, true));
+
         if ($result['success']) {
             Toast::success('Tạo bài viết thành công!');
             $this->redirect('/admin/posts');
         } else {
             Toast::error($result['message']);
-            $this->redirect('/post/create');
+            $this->redirect('/admin/posts/create');
         }
     }
 
@@ -201,7 +247,15 @@ class PostController extends BaseController
         $tagModel = new TagModel();
 
         // Get selected tag IDs
-        $selectedTags = array_column($post['tags'], 'id');
+        // DEBUG: Xem cấu trúc của tags
+        error_log("Post tags structure: " . print_r($post['tags'], true));
+
+        $selectedTags = [];
+        if (isset($post['tags']) && is_array($post['tags'])) {
+            $selectedTags = array_column($post['tags'], 'id');
+        }
+
+        error_log("Selected tag IDs: " . print_r($selectedTags, true));
 
         $this->viewWithLayout('admin/posts/post_edit', [
             'post' => $post,
@@ -209,7 +263,8 @@ class PostController extends BaseController
             'tags' => $tagModel->getAll(),
             'selectedTags' => $selectedTags,
             'pageTitle' => 'Sửa bài viết: ' . $post['title'],
-            'csrfToken' => Security::generateCSRFToken()
+            'csrfToken' => Security::generateCSRFToken(),
+            "needPostEdit" => true
         ], "layouts/admin_layout");
     }
 
@@ -226,22 +281,39 @@ class PostController extends BaseController
         $post = $postModel->getById($id);
 
         if (!$post) {
-            Session::flash('error', 'Bài viết không tồn tại');
-            $this->redirect('/');
+            Toast::error('Bài viết không tồn tại');
+            $this->redirect('/admin/posts');
             return;
         }
 
-        // Kiểm tra quyền
         if (!$this->canEdit($post)) {
-            Session::flash('error', 'Bạn không có quyền sửa bài viết này');
-            $this->redirect('/');
+            Toast::error('Bạn không có quyền sửa bài viết này');
+            $this->redirect('/admin/posts');
             return;
         }
 
-        // Validate CSRF
         if (!$this->validateCSRF()) {
-            $this->redirect('/post/' . $id . '/edit');
+            $this->redirect('/admin/posts/' . $id . '/edit');
             return;
+        }
+
+        // ✅ XỬ LÝ UPLOAD ẢNH
+        $coverImage = $post['cover_image']; // Giữ ảnh cũ
+
+        if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
+            $uploadResult = $this->uploadFile('cover_image', 'uploads/posts/');
+
+            if ($uploadResult['success']) {
+                // Xóa ảnh cũ nếu có
+                if (!empty($post['cover_image'])) {
+                    $oldImagePath = __DIR__ . '/../../../public/' . $post['cover_image'];
+                    if (file_exists($oldImagePath)) {
+                        @unlink($oldImagePath);
+                        error_log("Deleted old image: " . $oldImagePath);
+                    }
+                }
+                $coverImage = $uploadResult['path'];
+            }
         }
 
         // Prepare data
@@ -251,7 +323,7 @@ class PostController extends BaseController
             'slug' => $this->input('slug') ? Security::createSlug($this->input('slug')) : '',
             'excerpt' => Security::sanitize($this->input('excerpt')),
             'content' => $this->input('content'),
-            'cover_image' => $this->input('cover_image', $post['cover_image']),
+            'cover_image' => $coverImage,
             'status' => $this->input('status', 'draft'),
             'tags' => $this->input('tags', [])
         ];
@@ -264,7 +336,7 @@ class PostController extends BaseController
             $this->redirect('/admin/posts');
         } else {
             Toast::error($result['message']);
-            $this->redirect('/posts/' . $id . '/edit');
+            $this->redirect('/admin/posts/' . $id . '/edit');
         }
     }
 
@@ -279,7 +351,8 @@ class PostController extends BaseController
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
-            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            Toast::error('Invalid CSRF token');
+            $this->redirect('/admin/posts');
             return;
         }
 
@@ -287,21 +360,34 @@ class PostController extends BaseController
         $post = $postModel->getById($id);
 
         if (!$post) {
-            $this->json(['success' => false, 'message' => 'Bài viết không tồn tại'], 404);
+            Toast::error('Bài viết không tồn tại');
+            $this->redirect('/admin/posts');
             return;
         }
 
         // Kiểm tra quyền xóa
         if (!$this->canDelete($post)) {
-            $this->json(['success' => false, 'message' => 'Bạn không có quyền xóa bài viết này'], 403);
+            Toast::error('Bạn không có quyền xóa bài viết này');
+            $this->redirect('/admin/posts');
             return;
         }
 
+        // ✅ XÓA ẢNH NẾU CÓ
+        if (!empty($post['cover_image'])) {
+            $imagePath = __DIR__ . '/../../../public/' . $post['cover_image'];
+            if (file_exists($imagePath)) {
+                @unlink($imagePath);
+                error_log("Deleted image: " . $imagePath);
+            }
+        }
+
+        // ✅ XÓA POST
         if ($postModel->delete($id)) {
-            Session::flash('success', 'Xóa bài viết thành công');
-            $this->json(['success' => true, 'redirect' => '/']);
+            Toast::success('Xóa bài viết thành công');
+            $this->redirect('/admin/posts');
         } else {
-            $this->json(['success' => false, 'message' => 'Không thể xóa bài viết'], 500);
+            Toast::error('Không thể xóa bài viết');
+            $this->redirect('/admin/posts');
         }
     }
 

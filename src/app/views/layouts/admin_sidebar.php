@@ -12,7 +12,7 @@
         <ul class="sidebar__menu">
             <!-- Dashboard -->
             <li class="sidebar__menu-item">
-                <a href=<?php echo Router::url('/admin/dashboard'); ?> class="sidebar__menu-link">
+                <a href=<?php echo Router::url('/admin'); ?> class="sidebar__menu-link">
                     <i class="fas fa-tachometer-alt sidebar__menu-icon"></i>
                     <span class="sidebar__menu-text">Dashboard</span>
                 </a>

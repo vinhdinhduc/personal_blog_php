@@ -183,45 +183,82 @@ class BaseController
 
     //Hỗ trơợ tải file
 
-    protected function uploadFile($fieldName, $destination = "uploads/")
+    protected function uploadFile($fieldName, $uploadDir = 'uploads/')
     {
-        if (isset($_FILES[$fieldName])) {
-            return ["success" => false, "message" => "Chưa có file được tải lên."];
+        // ✅ CHECK FILE TỒN TẠI
+        if (!isset($_FILES[$fieldName])) {
+            return [
+                'success' => false,
+                'message' => 'Không tìm thấy file upload'
+            ];
         }
 
         $file = $_FILES[$fieldName];
 
-        //validate 
-
-        $validate = Security::validateFileUpload($file);
-        if (!$validate["success"]) {
-            return $validate;
+        // ✅ CHECK ERROR
+        if ($file['error'] === UPLOAD_ERR_NO_FILE) {
+            return [
+                'success' => false,
+                'message' => 'Chưa có file được tải lên'
+            ];
         }
 
-        //Tạo file name duy nhất
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $errors = [
+                UPLOAD_ERR_INI_SIZE => 'File quá lớn',
+                UPLOAD_ERR_FORM_SIZE => 'File quá lớn',
+                UPLOAD_ERR_PARTIAL => 'File upload không hoàn chỉnh',
+                UPLOAD_ERR_NO_TMP_DIR => 'Thiếu thư mục tạm',
+                UPLOAD_ERR_CANT_WRITE => 'Không thể ghi file',
+            ];
 
-        $extension = pathinfo($file["name"], PATHINFO_EXTENSION);
-        $fileName = uniqid() . "_" . time() . "." . $extension;
-        $uploadPath = __DIR__ . "/../../public/" . $destination;
+            return [
+                'success' => false,
+                'message' => $errors[$file['error']] ?? 'Lỗi upload'
+            ];
+        }
 
-        // Create directory if not exists
+        // Validate file type
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($file['type'], $allowedTypes)) {
+            return [
+                'success' => false,
+                'message' => 'Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)'
+            ];
+        }
+
+        // Validate file size (max 5MB)
+        if ($file['size'] > 5 * 1024 * 1024) {
+            return [
+                'success' => false,
+                'message' => 'File không được vượt quá 5MB'
+            ];
+        }
+
+        // Create upload directory if not exists
+        $uploadPath = __DIR__ . '/../../../public/' . $uploadDir;
         if (!is_dir($uploadPath)) {
             mkdir($uploadPath, 0755, true);
         }
 
-        $fullPath = $uploadPath . $fileName;
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = uniqid() . '_' . time() . '.' . $extension;
+        $filepath = $uploadPath . $filename;
 
-        // Move file
-        if (move_uploaded_file($file['tmp_name'], $fullPath)) {
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
             return [
                 'success' => true,
-                'filename' => $fileName,
-                'path' => $destination . $fileName,
-                'url' => Router::url($destination . $fileName)
+                'path' => $uploadDir . $filename,
+                'url' => Router::url() . '/' . $uploadDir . $filename
             ];
         }
 
-        return ['success' => false, 'message' => 'Failed to upload file'];
+        return [
+            'success' => false,
+            'message' => 'Không thể lưu file'
+        ];
     }
 
     //Phân trang

@@ -1,6 +1,7 @@
-<?php ?>
+<?php
+$needPostEdit = $needPostEdit ?? false;
 
-<!---->
+?>
 <!DOCTYPE html>
 
 <html lang="vi">
@@ -12,8 +13,16 @@
     <link rel="stylesheet" href="<?php echo Router::url('css/toast.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="<?php echo Router::url('css/admin.css'); ?>">
-
     <link rel="stylesheet" href="<?php echo Router::url('css/user_form.css'); ?>">
+
+
+    <link rel="stylesheet" href="<?php echo Router::url('css/post-editor.css'); ?>">
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
     <?php if (isset($additionalCSS)): ?>
         <?= $additionalCSS ?>
     <?php endif; ?>
@@ -29,10 +38,14 @@
             </main>
         </div>
     </div>
+    <!-- Post Editor JS -->
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="<?php echo Router::url('js/post-editor.js'); ?>"></script>
+
     <script src="<?php echo Router::url('js/toast.js'); ?>"></script>
     <script src="<?php echo Router::url('js/admin.js'); ?>"></script>
     <?php include __DIR__ . '/../partials/toast.php'; ?>
-
 
     <?php if (isset($additionalJS)): ?>
         <?= $additionalJS ?>
