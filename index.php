@@ -19,6 +19,7 @@ function requireFile(string $path)
 requireFile(__DIR__ . '/src/app/routes/route.php');
 requireFile(__DIR__ . '/src/app/helpers/Session.php');
 requireFile(__DIR__ . '/src/app/helpers/AutoLoad.php');
+requireFile(__DIR__ . '/src/config/config.php');
 // Start session
 Session::start();
 

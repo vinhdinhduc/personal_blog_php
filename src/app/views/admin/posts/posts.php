@@ -1,3 +1,10 @@
+<?php
+echo "<prev>";
+print_r($posts);
+echo "</prev>";
+
+?>
+
 <!-- Page Header -->
 <div class="content__header">
     <h1 class="content__title">Quản lý bài viết</h1>
@@ -112,7 +119,7 @@
                         </td>
                         <td>
                             <a href="<?= Router::url("/posts/{$post['slug']}") ?>" target="_blank" class="btn btn--info btn--sm" data-tooltip="Xem bài viết">
-                                <i class="fas fa-eye"></i>
+                                <i class="fas fa-eye "></i>
                             </a>
                             <a href="<?= Router::url("/admin/posts/edit/{$post['id']}") ?>" class="btn btn--warning btn--sm" data-tooltip="Sửa">
                                 <i class="fas fa-edit"></i>

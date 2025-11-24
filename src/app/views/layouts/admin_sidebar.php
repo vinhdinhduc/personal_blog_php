@@ -1,7 +1,7 @@
 <aside class="admin-sidebar">
     <!-- Brand/Logo -->
     <div class="sidebar__brand">
-        <a href=<?php echo Router::url('/admin/dashboard'); ?> class="sidebar__brand-logo">
+        <a href=<?php echo Router::url('/admin'); ?> class="sidebar__brand-logo">
             <i class="fas fa-cog"></i>
             <span class="sidebar__brand-text">Admin Panel</span>
         </a>
@@ -79,7 +79,7 @@
 
             <!-- View Site -->
             <li class="sidebar__menu-item">
-                <a href="/" target="_blank" class="sidebar__menu-link">
+                <a href=<?php echo Router::url('/'); ?> target="_blank" class="sidebar__menu-link">
                     <i class="fas fa-external-link-alt sidebar__menu-icon"></i>
                     <span class="sidebar__menu-text">Xem website</span>
                 </a>
@@ -87,7 +87,7 @@
 
             <!-- Logout -->
             <li class="sidebar__menu-item">
-                <a href="/admin/logout" class="sidebar__menu-link">
+                <a href=<?php echo Router::url('/logout'); ?> class="sidebar__menu-link">
                     <i class="fas fa-sign-out-alt sidebar__menu-icon"></i>
                     <span class="sidebar__menu-text">Đăng xuất</span>
                 </a>

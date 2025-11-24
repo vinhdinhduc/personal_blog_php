@@ -25,6 +25,8 @@ function registerPublicRoutes(Router $router)
         $controller->show($params['slug']);
     });
 
+
+
     // Lọc theo category
     $router->get('/category/{slug}', function ($params) {
         $controller = new HomeController();
@@ -56,10 +58,10 @@ function registerPublicRoutes(Router $router)
     });
 
     // Trang giới thiệu
-    // $router->get('/about', function () {
-    //     $controller = new HomeController();
-    //     $controller->about();
-    // });
+    $router->get('/about', function () {
+        $controller = new HomeController();
+        $controller->about();
+    });
 
     // // Trang liên hệ
     // $router->get('/contact', function () {

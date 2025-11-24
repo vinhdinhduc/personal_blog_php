@@ -12,11 +12,11 @@ $needPostEdit = $needPostEdit ?? false;
     <title><?= $pageTitle ?? 'Admin Panel' ?> - Admin Dashboard</title>
     <link rel="stylesheet" href="<?php echo Router::url('css/toast.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="<?php echo Router::url('css/admin.css'); ?>">
-    <link rel="stylesheet" href="<?php echo Router::url('css/user_form.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/admin/admin.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/admin/user_form.css'); ?>">
 
 
-    <link rel="stylesheet" href="<?php echo Router::url('css/post-editor.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/admin/post-editor.css'); ?>">
     <!-- Quill Rich Text Editor -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 

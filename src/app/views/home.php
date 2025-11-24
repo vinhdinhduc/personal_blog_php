@@ -1,7 +1,5 @@
 <?php
-
-
-
+require_once __DIR__ . '/../helpers/ImageHelper.php';
 
 $postModel = new PostModel();
 $categoryModel = new CategoryModel();
@@ -67,19 +65,14 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                         <?php foreach ($posts as $post): ?>
                             <article class="post-card">
                                 <div class="post-image">
-                                    <a href="post.php?slug=<?php echo $post['slug']; ?>">
-                                        <img src="<?php echo Router::url() . "public/" . ($post['cover_image'] ?? 'assets/images/default-post.jpg'); ?>"
-                                            alt="<?php echo htmlspecialchars($post['title']); ?>">
-                                    </a>
-                                    <?php if ($post['category_name']): ?>
-                                        <span class="post-category"><?php echo htmlspecialchars($post['category_name']); ?></span>
-                                    <?php endif; ?>
+                                    <!-- ✅ Dùng ImageHelper -->
+                                    <img src="<?= ImageHelper::postCover($post['cover_image']) ?>"
+                                        alt="<?= htmlspecialchars($post['title']) ?>">
                                 </div>
-
                                 <div class="post-content">
                                     <h3 class="post-title">
-                                        <a href="post.php?slug=<?php echo $post['slug']; ?>">
-                                            <?php echo htmlspecialchars($post['title']); ?>
+                                        <a href="<?= Router::url('/posts/' . $post['slug']) ?>">
+                                            <?= htmlspecialchars($post['title']) ?>
                                         </a>
                                     </h3>
 

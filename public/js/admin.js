@@ -51,7 +51,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   menuLinks.forEach((link) => {
     const linkPath = new URL(link.href).pathname;
-    if (currentPath === linkPath || currentPath.startsWith(linkPath + "/")) {
+    console.log("Link path", linkPath);
+    console.log("Current path", currentPath);
+
+    if (currentPath === linkPath) {
       link.classList.add("active");
     }
   });

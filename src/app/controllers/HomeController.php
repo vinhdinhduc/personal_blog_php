@@ -175,4 +175,14 @@
                 'pageTitle' => 'Tìm kiếm: ' . $keyword
             ]);
         }
+
+        /**
+         * Trang giới thiệu
+         */
+        public function about()
+        {
+            $this->viewWithLayout('users/about', [
+                'pageTitle' => 'Giới thiệu - Blog IT'
+            ], "layouts/main");
+        }
     }
