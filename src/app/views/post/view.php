@@ -13,8 +13,8 @@
  * - $relatedPosts: Array - Bài viết liên quan
  */
 
-require_once __DIR__ . '/../helpers/ImageHelper.php';
-// require_once __DIR__ . '/../../helpers/CommentHelper.php';
+require_once __DIR__ . '/../../helpers/ImageHelper.php';
+require_once __DIR__ . '/../../helpers/CommentHelper.php';
 ?>
 
 <!-- ============================================

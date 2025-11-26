@@ -95,7 +95,10 @@ class UserModel extends BaseModel
     {
         return $this->findById($id, 'id, first_name, last_name, email, role, avatar, created_at');
     }
-
+    public function getFullUserById($id)
+    {
+        return $this->findById($id);
+    }
     /**
      * Get user with stats
      */
@@ -495,5 +498,16 @@ class UserModel extends BaseModel
         }
 
         return ['can_delete' => true];
+    }
+
+
+    public function getUserByEmail($email)
+    {
+        return $this->findOne(['email' => $email]);
+    }
+
+    public function resetRememberToken($userId)
+    {
+        return $this->updateById($userId, ['remember_token' => null]);
     }
 }

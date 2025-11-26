@@ -1,10 +1,3 @@
-<?php
-echo "<prev>";
-print_r($posts);
-echo "</prev>";
-
-?>
-
 <!-- Page Header -->
 <div class="content__header">
     <h1 class="content__title">Quản lý bài viết</h1>

@@ -36,35 +36,24 @@ function registerAuthRoutes(Router $router)
     });
 
     // Quên mật khẩu
-    // $router->get('/forgot-password', function () {
-    //     $controller = new AuthController();
-    //     $controller->showForgotPassword();
-    // });
+    $router->get('/forgot-password', function () {
+        $controller = new AuthController();
+        $controller->showForgotPassword();
+    });
 
-    // $router->post('/forgot-password', function () {
-    //     $controller = new AuthController();
-    //     $controller->forgotPassword();
-    // });
+    $router->post('/forgot-password', function () {
+        $controller = new AuthController();
+        $controller->forgotPassword();
+    });
 
     // Reset mật khẩu
-    // $router->get('/reset-password/{token}', function ($params) {
-    //     $controller = new AuthController();
-    //     $controller->showResetPassword($params['token']);
-    // });
+    $router->get('/reset-password', function () {
+        $controller = new AuthController();
+        $controller->showResetPassword($_GET['token'] ?? '');
+    });
 
-    // $router->post('/reset-password', function () {
-    //     $controller = new AuthController();
-    //     $controller->resetPassword();
-    // });
-
-    // // User profile (yêu cầu đăng nhập)
-    // $router->get('/profile', function () {
-    //     $controller = new UserController();
-    //     $controller->profile();
-    // });
-
-    // $router->post('/profile/update', function () {
-    //     $controller = new UserController();
-    //     $controller->updateProfile();
-    // });
+    $router->post('/reset-password', function () {
+        $controller = new AuthController();
+        $controller->resetPassword();
+    });
 }

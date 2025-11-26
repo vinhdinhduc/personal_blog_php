@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="<?php echo Router::url('css/users/post-detail.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/users/about.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/toast.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/users/profile.css'); ?>">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -29,6 +30,7 @@
     <script src="<?php echo Router::url('js/toast.js'); ?>"></script>
     <script src="<?php echo Router::url('/js/main.js'); ?>"></script>
     <script src="<?php echo Router::url('/js/post-detail.js'); ?>"></script>
+    <script src="<?php echo Router::url('/js/profile.js'); ?>"></script>
 
     <?php include __DIR__ . '/../partials/toast.php'; ?>
 </body>

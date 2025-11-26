@@ -66,7 +66,7 @@ $page_title = "Đăng nhập";
                         <input type="checkbox" id="remember" name="remember">
                         <span class="auth-form__checkbox-label">Ghi nhớ đăng nhập</span>
                     </label>
-                    <a href="#" class="auth-form__link auth-form__link--forgot">Quên mật khẩu?</a>
+                    <a href="<?php echo Router::url('/forgot-password'); ?>" class="auth-form__link auth-form__link--forgot">Quên mật khẩu?</a>
                 </div>
 
                 <!-- Submit Button -->

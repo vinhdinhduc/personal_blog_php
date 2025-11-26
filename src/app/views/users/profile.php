@@ -1,340 +1,195 @@
-<?php
-// Mock user data
-$user = [
-    'id' => 1,
-    'first_name' => 'Nguyễn',
-    'last_name' => 'Văn A',
-    'email' => 'nguyenvana@example.com',
-    'role' => 'admin',
-    'created_at' => '2025-01-15 10:00:00',
-    'total_posts' => 8,
-    'total_views' => 12456
-];
-
-// Mock user posts
-$user_posts = [
-    ['id' => 1, 'title' => 'Hướng dẫn học PHP từ cơ bản đến nâng cao', 'status' => 'published', 'views' => 1523, 'created_at' => '2025-11-10', 'cover_image' => 'https://images.unsplash.com/photo-1599507593499-a3f7d7d97667?w=400'],
-    ['id' => 7, 'title' => 'RESTful API Design Best Practices', 'status' => 'published', 'views' => 892, 'created_at' => '2025-11-04', 'cover_image' => 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400'],
-    ['id' => 6, 'title' => 'Docker và Kubernetes: Hướng dẫn thực hành', 'status' => 'published', 'views' => 1234, 'created_at' => '2025-11-05', 'cover_image' => 'https://images.unsplash.com/photo-1605745341112-85968b19335b?w=400'],
-    ['id' => 10, 'title' => 'Microservices Architecture Explained', 'status' => 'draft', 'views' => 0, 'created_at' => '2025-11-12', 'cover_image' => 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400'],
-];
-
-$page_title = "Hồ sơ của " . $user['first_name'] . ' ' . $user['last_name'];
-include 'header.php';
-?>
-
-<style>
-    .profile-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    .profile-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        padding: 3rem;
-        color: white;
-        margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 3rem;
-        font-weight: 700;
-        color: #667eea;
-        flex-shrink: 0;
-    }
-
-    .profile-info h1 {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .profile-email {
-        opacity: 0.9;
-        margin-bottom: 1rem;
-    }
-
-    .profile-badge {
-        display: inline-block;
-        background-color: rgba(255, 255, 255, 0.2);
-        padding: 0.4rem 1rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .profile-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
-
-    .stat-card {
-        background: white;
-        border: 1px solid #e5e5e5;
-        border-radius: 12px;
-        padding: 1.5rem;
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-        color: #666;
-        font-size: 0.95rem;
-    }
-
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .section-header h2 {
-        font-size: 1.5rem;
-        color: #1a1a1a;
-    }
-
-    .btn-new-post {
-        padding: 0.6rem 1.5rem;
-        background-color: #1a1a1a;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 500;
-        transition: all 0.3s;
-    }
-
-    .btn-new-post:hover {
-        background-color: #333;
-    }
-
-    .posts-list {
-        display: grid;
-        gap: 1.5rem;
-    }
-
-    .post-item {
-        background: white;
-        border: 1px solid #e5e5e5;
-        border-radius: 12px;
-        padding: 1.5rem;
-        display: flex;
-        gap: 1.5rem;
-        transition: all 0.3s;
-    }
-
-    .post-item:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-
-    .post-item-thumbnail {
-        width: 150px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 8px;
-        flex-shrink: 0;
-    }
-
-    .post-item-content {
-        flex: 1;
-    }
-
-    .post-item-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 0.75rem;
-    }
-
-    .post-item-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #1a1a1a;
-        margin-bottom: 0.5rem;
-    }
-
-    .post-item-title a {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    .post-item-title a:hover {
-        color: #6366f1;
-    }
-
-    .post-status {
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .status-published {
-        background-color: #dcfce7;
-        color: #166534;
-    }
-
-    .status-draft {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-
-    .post-item-meta {
-        display: flex;
-        gap: 1.5rem;
-        color: #666;
-        font-size: 0.9rem;
-    }
-
-    .post-item-actions {
-        display: flex;
-        gap: 0.75rem;
-        margin-top: 1rem;
-    }
-
-    .btn-action {
-        padding: 0.4rem 1rem;
-        border: 1px solid #e5e5e5;
-        border-radius: 6px;
-        text-decoration: none;
-        color: #666;
-        font-size: 0.9rem;
-        transition: all 0.3s;
-    }
-
-    .btn-action:hover {
-        border-color: #6366f1;
-        color: #6366f1;
-    }
-
-    .btn-delete {
-        color: #dc2626;
-    }
-
-    .btn-delete:hover {
-        border-color: #dc2626;
-    }
-
-    @media (max-width: 768px) {
-        .profile-header {
-            flex-direction: column;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .profile-stats {
-            grid-template-columns: 1fr;
-        }
-
-        .post-item {
-            flex-direction: column;
-        }
-
-        .post-item-thumbnail {
-            width: 100%;
-            height: 200px;
-        }
-
-        .section-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
-        }
-
-        .btn-new-post {
-            text-align: center;
-        }
-    }
-</style>
-
-<div class="profile-container">
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="profile-avatar">
-            <?php echo strtoupper(substr($user['first_name'], 0, 1)); ?>
+<div class="profile">
+    <div class="profile__container">
+        <div class="profile__header">
+            <h1 class="profile__title">Thông tin cá nhân</h1>
+            <p class="profile__subtitle">Quản lý thông tin tài khoản của bạn</p>
         </div>
-        <div class="profile-info">
-            <h1><?php echo $user['first_name'] . ' ' . $user['last_name']; ?></h1>
-            <p class="profile-email">📧 <?php echo $user['email']; ?></p>
-            <span class="profile-badge">
-                <?php echo $user['role'] === 'admin' ? '👑 Quản trị viên' : '👤 Thành viên'; ?>
-            </span>
-        </div>
-    </div>
 
-    <!-- Stats -->
-    <div class="profile-stats">
-        <div class="stat-card">
-            <div class="stat-value"><?php echo $user['total_posts']; ?></div>
-            <div class="stat-label">Bài viết</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value"><?php echo number_format($user['total_views']); ?></div>
-            <div class="stat-label">Lượt xem</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value"><?php echo date('d/m/Y', strtotime($user['created_at'])); ?></div>
-            <div class="stat-label">Tham gia</div>
-        </div>
-    </div>
-
-    <!-- Posts Section -->
-    <div class="section-header">
-        <h2>Bài viết của tôi</h2>
-        <a href="admin_post_create.php" class="btn-new-post">+ Tạo bài viết mới</a>
-    </div>
-
-    <div class="posts-list">
-        <?php foreach ($user_posts as $post): ?>
-            <div class="post-item">
-                <img src="<?php echo $post['cover_image']; ?>" alt="<?php echo $post['title']; ?>" class="post-item-thumbnail">
-
-                <div class="post-item-content">
-                    <div class="post-item-header">
-                        <div>
-                            <h3 class="post-item-title">
-                                <a href="post_detail.php?id=<?php echo $post['id']; ?>">
-                                    <?php echo $post['title']; ?>
-                                </a>
-                            </h3>
-                            <div class="post-item-meta">
-                                <span>📅 <?php echo date('d/m/Y', strtotime($post['created_at'])); ?></span>
-                                <span>👁️ <?php echo number_format($post['views']); ?> lượt xem</span>
-                            </div>
+        <div class="profile__content">
+            <!-- Avatar Section -->
+            <div class="profile__card profile__card--avatar">
+                <div class="profile-avatar">
+                    <div class="profile-avatar__wrapper">
+                        <img
+                            src="<?= !empty($user['avatar']) ? '/' . htmlspecialchars($user['avatar']) : '/public/images/default-avatar.png' ?>"
+                            alt="Avatar"
+                            class="profile-avatar__image"
+                            id="avatarPreview">
+                        <div class="profile-avatar__overlay">
+                            <label for="avatarInput" class="profile-avatar__btn">
+                                <svg class="profile-avatar__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span>Đổi ảnh</span>
+                            </label>
+                            <input
+                                type="file"
+                                id="avatarInput"
+                                accept="image/*"
+                                class="profile-avatar__input"
+                                hidden>
                         </div>
-                        <span class="post-status status-<?php echo $post['status']; ?>">
-                            <?php echo $post['status'] === 'published' ? 'Đã xuất bản' : 'Bản nháp'; ?>
-                        </span>
                     </div>
-
-                    <div class="post-item-actions">
-                        <a href="post_detail.php?id=<?php echo $post['id']; ?>" class="btn-action">👁️ Xem</a>
-                        <a href="admin_post_edit.php?id=<?php echo $post['id']; ?>" class="btn-action">✏️ Chỉnh sửa</a>
-                        <a href="#" class="btn-action btn-delete" onclick="return confirm('Bạn có chắc muốn xóa bài viết này?')">🗑️ Xóa</a>
+                    <div class="profile-avatar__info">
+                        <h3 class="profile-avatar__name"><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></h3>
+                        <p class="profile-avatar__email"><?= htmlspecialchars($user['email']) ?></p>
+                        <span class="profile-avatar__role profile-avatar__role--<?= $user['role'] ?>">
+                            <?= $user['role'] === 'admin' ? 'Quản trị viên' : 'Người dùng' ?>
+                        </span>
                     </div>
                 </div>
             </div>
-        <?php endforeach; ?>
+
+            <!-- Personal Info Section -->
+            <div class="profile__card">
+                <div class="profile-section">
+                    <div class="profile-section__header">
+                        <h2 class="profile-section__title">Thông tin cá nhân</h2>
+                        <p class="profile-section__desc">Cập nhật thông tin cơ bản của bạn</p>
+                    </div>
+
+                    <form action=<?php echo Router::url('/profile/update-info'); ?> method="POST" class="profile-form">
+                        <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+
+                        <div class="profile-form__row">
+                            <div class="profile-form__group">
+                                <label for="first_name" class="profile-form__label">
+                                    Họ <span class="profile-form__required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="first_name"
+                                    name="first_name"
+                                    class="profile-form__input"
+                                    value="<?= htmlspecialchars($user['first_name']) ?>"
+                                    required>
+                            </div>
+
+                            <div class="profile-form__group">
+                                <label for="last_name" class="profile-form__label">
+                                    Tên <span class="profile-form__required">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="last_name"
+                                    name="last_name"
+                                    class="profile-form__input"
+                                    value="<?= htmlspecialchars($user['last_name']) ?>"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="profile-form__group">
+                            <label for="email" class="profile-form__label">
+                                Email <span class="profile-form__required">*</span>
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="profile-form__input"
+                                value="<?= htmlspecialchars($user['email']) ?>"
+                                required>
+                        </div>
+
+                        <div class="profile-form__actions">
+                            <button type="submit" class="profile-btn profile-btn--primary">
+                                <svg class="profile-btn__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Change Password Section -->
+            <div class="profile__card">
+                <div class="profile-section">
+                    <div class="profile-section__header">
+                        <h2 class="profile-section__title">Đổi mật khẩu</h2>
+                        <p class="profile-section__desc">Cập nhật mật khẩu để bảo mật tài khoản</p>
+                    </div>
+
+                    <form action="<?php echo Router::url('/profile/change-password'); ?>" method="POST" class="profile-form">
+                        <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+
+                        <div class="profile-form__group">
+                            <label for="current_password" class="profile-form__label">
+                                Mật khẩu hiện tại <span class="profile-form__required">*</span>
+                            </label>
+                            <div class="profile-form__input-wrapper">
+                                <input
+                                    type="password"
+                                    id="current_password"
+                                    name="current_password"
+                                    class="profile-form__input"
+                                    required>
+                                <button type="button" class="profile-form__toggle-password" data-target="current_password">
+                                    <svg class="profile-form__eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="profile-form__group">
+                            <label for="new_password" class="profile-form__label">
+                                Mật khẩu mới <span class="profile-form__required">*</span>
+                            </label>
+                            <div class="profile-form__input-wrapper">
+                                <input
+                                    type="password"
+                                    id="new_password"
+                                    name="new_password"
+                                    class="profile-form__input"
+                                    minlength="6"
+                                    required>
+                                <button type="button" class="profile-form__toggle-password" data-target="new_password">
+                                    <svg class="profile-form__eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <span class="profile-form__hint">Tối thiểu 6 ký tự</span>
+                        </div>
+
+                        <div class="profile-form__group">
+                            <label for="confirm_password" class="profile-form__label">
+                                Xác nhận mật khẩu mới <span class="profile-form__required">*</span>
+                            </label>
+                            <div class="profile-form__input-wrapper">
+                                <input
+                                    type="password"
+                                    id="confirm_password"
+                                    name="confirm_password"
+                                    class="profile-form__input"
+                                    minlength="6"
+                                    required>
+                                <button type="button" class="profile-form__toggle-password" data-target="confirm_password">
+                                    <svg class="profile-form__eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="profile-form__actions">
+                            <button type="submit" class="profile-btn profile-btn--primary">
+                                <svg class="profile-btn__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Đổi mật khẩu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<?php include 'footer.php'; ?>

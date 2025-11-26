@@ -5,6 +5,8 @@
 require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../helpers/ToastHelper.php';
+require_once __DIR__ . '/../helpers/EmailHelper.php';
+require_once __DIR__ . '/../models/ResetPwdModel.php';
 
 class AuthController extends BaseController
 {
@@ -45,11 +47,11 @@ class AuthController extends BaseController
         }
 
         // Rate limiting
-        if (!Security::rateLimit('register', 3, 3600)) {
-            Toast::error('Bạn đã đăng ký quá nhiều lần. Vui lòng thử lại sau 1 giờ');
-            $this->redirect('/register');
-            return;
-        }
+        // if (!Security::rateLimit('register', 3, 3600)) {
+        //     Toast::error('Bạn đã đăng ký quá nhiều lần. Vui lòng thử lại sau 1 giờ');
+        //     $this->redirect('/register');
+        //     return;
+        // }
 
         $userModel = new UserModel();
 
@@ -91,7 +93,14 @@ class AuthController extends BaseController
         $result = $userModel->register($data);
 
         if ($result['success']) {
-            Toast::success('Đăng ký thành công! Vui lòng đăng nhập');
+            $fullName = $data['fName'] . ' ' . $data['lName'];
+            $emailSent = EmailHelper::sendWelcomeEmail($data['email'], $fullName);
+            if (!$emailSent) {
+                Toast::warning('Đăng ký thành công nhưng không thể gửi email chào mừng.');
+            } else {
+                Toast::info('Email chào mừng đã được gửi đến ' . $data['email']);
+            }
+            Toast::success('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
 
             $this->redirect('/login');
         } else {
@@ -203,12 +212,101 @@ class AuthController extends BaseController
         Toast::success('Đã đăng xuất');
         $this->redirect('/');
     }
+    public function showForgotPassword()
+    {
+        if (Session::isLoggedIn()) {
+            $this->redirect('/');
+            return;
+        }
 
-    /**
-     * Set remember me cookie
-     * @param int $userId
-     * @param User $userModel
-     */
+        $this->viewWithLayout("/auth/forgot_password", [
+            "pageTitle" => "Quên mật khẩu",
+            "csrfToken" => Security::generateCSRFToken()
+        ], "layouts/layout-auth");
+    }
+    public function forgotPassword()
+    {
+        $this->validateMethod('POST');
+
+        if (Session::isLoggedIn()) {
+            $this->redirect('/');
+            return;
+        }
+
+        if (!$this->validateCSRF()) {
+            Toast::error('Invalid request');
+            $this->redirect('/forgot-password');
+            return;
+        }
+
+        $rateLimitKey = "forgot_password_" . ($_SERVER["REMOTE_ADDR"] ?? "unknown");
+        // if (!Security::rateLimit($rateLimitKey, 3, 3600)) {
+        //     Toast::error('Bạn đã thử quên mật khẩu quá nhiều lần. Vui lòng thử lại sau 1 giờ.');
+        //     $this->redirect('/forgot-password');
+        //     return;
+        // }
+
+        $email = Security::sanitize($this->input('email'));
+
+
+        //Validate dữ liệu
+
+        if (empty($email)) {
+            Toast::error('Vui lòng nhập email');
+            $this->redirect('/forgot-password');
+            return;
+        }
+
+        if (!Security::validateEmail($email)) {
+            Toast::error('Email không hợp lệ');
+            $this->redirect('/forgot-password');
+            return;
+        }
+
+        //Check user có tồn tại không
+
+        $userModel = new UserModel();
+        $user = $userModel->getUserByEmail($email);
+
+        //Luôn hiển thị thông báo thành công để tránh lộ thông tin user
+        if (!$user) {
+            Toast::info('Nếu email tồn tại trong hệ thống, một liên kết đặt lại mật khẩu đã được gửi đến email của bạn.');
+            $this->redirect('/forgot-password');
+            return;
+        }
+
+        //Generate token
+
+        $resetTokenModel = new ResetPwdModel();
+
+        $token = $resetTokenModel->createResetToken($user["id"], $email);
+
+        if ($token) {
+
+
+            $resetLink = $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["HTTP_HOST"] . "/personal-blog/reset-password?token=" . $token;
+            //get full name
+            $fullName = trim(($user["first_name"] ?? "") . " " . ($user["last_name"] ?? ""));
+
+            //trường hợp không có tên thì dùng email làm tên
+            if (empty($fullName)) {
+                $fullName = explode("@", $email)[0];
+            }
+            error_log("Attempting to send reset email to: $email");
+            error_log("Reset link: $resetLink");
+            $emailSent = EmailHelper::sendPasswordResetEmail($email, $fullName, $resetLink);
+            error_log("Email sent result: " . ($emailSent ? 'SUCCESS' : 'FAILED'));
+            if ($emailSent) {
+                Toast::success("Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email của bạn.");
+            } else {
+                Toast::error("Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại sau.");
+            }
+        } else {
+
+            Toast::error("Có lỗi xảy ra. Vui lòng thử lại sau.");
+        }
+        $this->redirect('/forgot-password');
+    }
     private function setRememberMeCookie($userId, $userModel)
     {
         // Tạo token
@@ -259,6 +357,116 @@ class AuthController extends BaseController
             // Token không hợp lệ, xóa cookie
             setcookie('remember_token', '', time() - 3600, '/');
             setcookie('remember_user', '', time() - 3600, '/');
+        }
+    }
+
+
+
+    public function showResetPassword($token)
+    {
+
+        if (Session::isLoggedIn()) {
+            $this->redirect('/');
+            return;
+        }
+
+        $token = $this->input('token');
+        if (empty($token)) {
+            Toast::error('Token không hợp lệ');
+            $this->redirect('/forgot-password');
+            return;
+        }
+
+        //Verify token 
+
+        $resetTokenModel = new ResetPwdModel();
+        $resetData = $resetTokenModel->verifyToken($token);
+
+        if (!$resetData) {
+            Toast::error('Token không hợp lệ hoặc đã hết hạn');
+            $this->redirect('/forgot-password');
+            return;
+        }
+
+        $this->viewWithLayout('auth/reset_password', [
+            'pageTitle' => 'Đặt lại mật khẩu',
+            'csrfToken' => Security::generateCSRFToken(),
+            'token' => $token,
+            'email' => $resetData['email']
+        ], 'layouts/layout-auth');
+    }
+
+    public function resetPassword()
+    {
+        $this->validateMethod('POST');
+
+        if (Session::isLoggedIn()) {
+            $this->redirect('/');
+            return;
+        }
+
+        if (!$this->validateCSRF()) {
+            Toast::error('Invalid request');
+            $this->redirect('/reset-password');
+            return;
+        }
+
+
+        $token = $this->input('token');
+        $newPwd = trim($this->input('password'));
+        $confirmPwd = trim($this->input('password_confirm'));
+
+
+        if (empty($token) || empty($newPwd) || empty($confirmPwd)) {
+            Toast::error('Vui lòng điền đầy đủ thông tin');
+            if (!empty($token)) {
+                $this->redirect('/reset-password?token=' . $token);
+            } else {
+                $this->redirect('/forgot-password');
+            }
+            return;
+        }
+
+        if ($newPwd !== $confirmPwd) {
+            Toast::error('Mật khẩu xác nhận không khớp');
+            $this->redirect('/reset-password?token=' . $token);
+            return;
+        }
+        if (strlen($newPwd) < 6) {
+            Toast::error('Mật khẩu phải có ít nhất 6 ký tự');
+            $this->redirect('/reset-password?token=' . $token);
+            return;
+        }
+
+        //Verify token
+
+        $resetTokenModel = new ResetPwdModel();
+        $resetData = $resetTokenModel->verifyToken($token);
+
+        if (!$resetData) {
+            Toast::error('Token không hợp lệ hoặc đã hết hạn');
+            $this->redirect('/forgot-password');
+            return;
+        }
+        //update user
+        $userModel = new UserModel();
+        $result = $userModel->updateUser($resetData['user_id'], [
+            "password" => $newPwd,
+            "password_confirm" => $confirmPwd
+        ]);
+
+        if ($result["success"]) {
+            //Xoá token sau khi đổi mật khẩu thành công
+
+            $resetTokenModel->deleteTokens($token);
+
+            //Xoá tất cả token remember me của user
+            $userModel->resetRememberToken($resetData['user_id']);
+            Toast::success('Đặt lại mật khẩu thành công! Vui lòng đăng nhập.');
+            $this->redirect('/login');
+        } else {
+            Toast::error($result['message']);
+            $this->redirect('/reset-password?token=' . $token);
         }
     }
 }

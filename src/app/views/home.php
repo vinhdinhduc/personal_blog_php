@@ -71,7 +71,7 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                                 </div>
                                 <div class="post-content">
                                     <h3 class="post-title">
-                                        <a href="<?= Router::url('/posts/' . $post['slug']) ?>">
+                                        <a href="<?= Router::url('/post/' . $post['slug']) ?>">
                                             <?= htmlspecialchars($post['title']) ?>
                                         </a>
                                     </h3>

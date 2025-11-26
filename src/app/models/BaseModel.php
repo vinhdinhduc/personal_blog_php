@@ -7,6 +7,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 
+
 abstract class BaseModel
 {
     protected $conn;
@@ -308,7 +309,6 @@ abstract class BaseModel
     protected function bindParams($stmt, $params = [])
     {
         foreach ($params as $key => $value) {
-            // positional params (0-based keys) become 1-based indexes for PDO
             if (is_int($key)) {
                 $param = $key + 1;
             } else {

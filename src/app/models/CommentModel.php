@@ -179,7 +179,7 @@ class CommentModel
         // Lấy tất cả comments
         $approvedCondition = $includeUnapproved ? '' : 'AND c.is_approved = TRUE';
 
-        $query = "SELECT c.*, u.name as user_name, u.email as user_email
+        $query = "SELECT c.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email
                   FROM {$this->table} c
                   LEFT JOIN users u ON c.user_id = u.id
                   WHERE c.post_id = :post_id {$approvedCondition}

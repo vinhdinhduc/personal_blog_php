@@ -62,12 +62,31 @@ function registerPublicRoutes(Router $router)
         $controller = new HomeController();
         $controller->about();
     });
+    $router->post('/comment/create', function () {
+        $controller = new CommentController();
+        $controller->create();
+    });
+    //Profile
+    $router->get('/profile', function () {
+        $controller = new ProfileController();
+        $controller->index();
+    });
+    $router->post('/profile/update-info', function () {
+        $controller = new ProfileController();
+        $controller->updateInfo();
+    });
+    $router->post('/profile/change-password', function () {
+        $controller = new ProfileController();
+        $controller->changePassword();
+    });
+    //update avatar
+    $router->post('/profile/update-avatar', function () {
+        $controller = new ProfileController();
+        $controller->updateAvatar();
+    });
 
-    // // Trang liên hệ
-    // $router->get('/contact', function () {
-    //     $controller = new HomeController();
-    //     $controller->contact();
-    // });
+
+
 
     // // POST contact form
     // $router->post('/contact', function () {
