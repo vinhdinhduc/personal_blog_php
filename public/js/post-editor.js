@@ -39,7 +39,19 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   console.log("Quill Editor initialized successfully!");
-  console.log("Initial content:", window.quillEditor.root.innerHTML);
+
+  // ✅ LOAD EXISTING CONTENT (for edit mode)
+  const hiddenContent = document.getElementById("editorContent");
+  if (hiddenContent && hiddenContent.value.trim()) {
+    console.log("Loading existing content...");
+    window.quillEditor.root.innerHTML = hiddenContent.value;
+    console.log("Content loaded successfully!");
+  }
+
+  console.log(
+    "Initial content:",
+    window.quillEditor.root.innerHTML.substring(0, 100)
+  );
 
   // ✅ SYNC CONTENT NGAY KHI QUILL THAY ĐỔI
   window.quillEditor.on("text-change", function () {
@@ -53,104 +65,74 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// ==============================================
+// UTILITY FUNCTIONS (sử dụng window.quillEditor)
+// ==============================================
+
 (function () {
   "use strict";
-
-  // ==============================================
-  // 1. QUILL RICH TEXT EDITOR INITIALIZATION
-  // ==============================================
-
-  // Quill Toolbar Configuration
-  const toolbarOptions = [
-    // Headers
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-
-    // Font size
-    [{ size: ["small", false, "large", "huge"] }],
-
-    // Text formatting
-    ["bold", "italic", "underline", "strike"],
-
-    // Text color and background
-    [{ color: [] }, { background: [] }],
-
-    // Lists
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-
-    // Text alignment
-    [{ align: [] }],
-
-    // Links, images, videos
-    ["link", "image", "video"],
-
-    // Blockquote and code block
-    ["blockquote", "code-block"],
-
-    // Clear formatting
-    ["clean"],
-  ];
-
-  // Initialize Quill Editor
-  const quill = new Quill("#editor", {
-    theme: "snow",
-    modules: {
-      toolbar: toolbarOptions,
-      clipboard: {
-        matchVisual: false,
-      },
-    },
-    placeholder: "Bắt đầu viết nội dung bài viết của bạn...",
-  });
 
   // ==============================================
   // 2. SYNC QUILL CONTENT WITH FORM
   // ==============================================
 
-  const form = document.getElementById("postForm");
-  const editorContent = document.getElementById("editorContent");
-
-  if (form && editorContent) {
-    form.addEventListener("submit", function (e) {
-      // Get HTML content from Quill
-      const html = quill.root.innerHTML;
-      editorContent.value = html;
-
-      // Validation
-      if (quill.getText().trim().length === 0) {
-        e.preventDefault();
-        alert("Nội dung bài viết không được để trống!");
-        return false;
-      }
-    });
+  // Wait for Quill to be ready
+  function waitForQuill(callback) {
+    if (window.quillEditor) {
+      callback();
+    } else {
+      setTimeout(() => waitForQuill(callback), 100);
+    }
   }
+
+  waitForQuill(function () {
+    const form = document.getElementById("postForm");
+    const editorContent = document.getElementById("editorContent");
+
+    if (form && editorContent) {
+      form.addEventListener("submit", function (e) {
+        // Get HTML content from Quill
+        const html = window.quillEditor.root.innerHTML;
+        editorContent.value = html;
+
+        // Validation
+        if (window.quillEditor.getText().trim().length === 0) {
+          e.preventDefault();
+          alert("Nội dung bài viết không được để trống!");
+          return false;
+        }
+      });
+    }
+  });
 
   // ==============================================
   // 3. WORD & CHARACTER COUNTER
   // ==============================================
 
-  const wordCountElement = document.getElementById("wordCount");
-  const charCountElement = document.getElementById("charCount");
+  waitForQuill(function () {
+    const wordCountElement = document.getElementById("wordCount");
+    const charCountElement = document.getElementById("charCount");
 
-  function updateCounter() {
-    const text = quill.getText().trim();
-    const words = text.length > 0 ? text.split(/\s+/).length : 0;
-    const chars = text.length;
+    function updateCounter() {
+      const text = window.quillEditor.getText().trim();
+      const words = text.length > 0 ? text.split(/\s+/).length : 0;
+      const chars = text.length;
 
-    if (wordCountElement) {
-      wordCountElement.textContent = words.toLocaleString();
+      if (wordCountElement) {
+        wordCountElement.textContent = words.toLocaleString();
+      }
+
+      if (charCountElement) {
+        charCountElement.textContent = chars.toLocaleString();
+      }
     }
 
-    if (charCountElement) {
-      charCountElement.textContent = chars.toLocaleString();
-    }
-  }
+    // Update counter on text change
+    window.quillEditor.on("text-change", updateCounter);
 
-  // Update counter on text change
-  quill.on("text-change", updateCounter);
-
-  // Initial count
-  updateCounter();
+    // Initial count
+    updateCounter();
+  });
 
   // ==============================================
   // 4. SLUG GENERATION
@@ -450,7 +432,9 @@ document.addEventListener("DOMContentLoaded", function () {
     formData.set("auto_save", "1");
 
     // Get Quill content
-    formData.set("content", quill.root.innerHTML);
+    if (window.quillEditor) {
+      formData.set("content", window.quillEditor.root.innerHTML);
+    }
 
     fetch(form.action, {
       method: "POST",
@@ -468,9 +452,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Trigger auto-save on content change
-  quill.on("text-change", function () {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(autoSaveDraft, AUTOSAVE_DELAY);
+  waitForQuill(function () {
+    window.quillEditor.on("text-change", function () {
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(autoSaveDraft, AUTOSAVE_DELAY);
+    });
   });
 
   // ==============================================
@@ -545,8 +531,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let hasUnsavedChanges = false;
 
-  quill.on("text-change", function () {
-    hasUnsavedChanges = true;
+  waitForQuill(function () {
+    window.quillEditor.on("text-change", function () {
+      hasUnsavedChanges = true;
+    });
   });
 
   form?.addEventListener("submit", function () {

@@ -12,6 +12,17 @@
 
     class HomeController extends BaseController
     {
+        private $postModel;
+        private $categoryModel;
+        private $tagModel;
+
+
+        public function __construct()
+        {
+            $this->postModel = new PostModel();
+            $this->categoryModel = new CategoryModel();
+            $this->tagModel = new TagModel();
+        }
 
         /**
          * Trang chủ - danh sách bài viết
@@ -66,29 +77,27 @@
             }
 
             $page = $this->input('page', 1);
-            $perPage = 10;
+            $perPage = 9;
 
             // Lấy posts theo category
             $posts = $postModel->getByCategory($category['id'], $page, $perPage);
             $totalPosts = $postModel->countByCategory($category['id']);
-
-            // Pagination
-            $pagination = $this->paginate($totalPosts, $page, $perPage);
+            $totalPages = ceil($totalPosts / $perPage);
 
             // Sidebar data
-            $categories = $categoryModel->getAll();
+            $allCategories = $categoryModel->getAll();
             $tags = $tagModel->getAll();
-            $recentPosts = $postModel->getRecentPosts(5);
 
-            $this->viewWithLayout('home', [
+            $this->viewWithLayout('users/category', [
                 'posts' => $posts,
-                'pagination' => $pagination,
-                'categories' => $categories,
+                'category' => $category,
+                'totalPosts' => $totalPosts,
+                'totalPages' => $totalPages,
+                'page' => $page,
+                'allCategories' => $allCategories,
                 'tags' => $tags,
-                'recentPosts' => $recentPosts,
-                'currentCategory' => $category,
                 'pageTitle' => 'Danh mục: ' . $category['name']
-            ]);
+            ], 'layouts/main');
         }
 
         //     /**
@@ -134,45 +143,74 @@
             ]);
         }
 
-        //     /**
-        //      * Tìm kiếm bài viết
-        //      */
-        public function search()
+        /**
+         * Trang xem tất cả bài viết
+         */
+        public function allPosts()
         {
-            $keyword = $this->input('q', '');
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $perPage = 12;
+            $sort = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
 
-            if (empty($keyword)) {
-                $this->redirect('/');
-                return;
+            // Xử lý sort
+            $orderBy = 'created_at DESC';
+            switch ($sort) {
+                case 'oldest':
+                    $orderBy = 'created_at ASC';
+                    break;
+                case 'most-viewed':
+                    $orderBy = 'views DESC';
+                    break;
+                case 'title-asc':
+                    $orderBy = 'title ASC';
+                    break;
+                case 'title-desc':
+                    $orderBy = 'title DESC';
+                    break;
+                default:
+                    $orderBy = 'created_at DESC';
             }
 
-            $postModel = new PostModel();
-            $categoryModel = new CategoryModel();
-            $tagModel = new TagModel();
+            $posts = $this->postModel->getPublishedPosts($page, $perPage);
+            $totalPosts = $this->postModel->countPublishedPosts();
+            $totalPages = ceil($totalPosts / $perPage);
 
-            $page = $this->input('page', 1);
-            $perPage = 10;
-
-            // Search posts
-            $posts = $postModel->search($keyword, $page, $perPage);
-            $totalPosts = $postModel->countSearch($keyword);
-
-            // Pagination
-            $pagination = $this->paginate($totalPosts, $page, $perPage);
-
-            // Sidebar data
-            $categories = $categoryModel->getAll();
-            $tags = $tagModel->getAll();
-            $recentPosts = $postModel->getRecentPosts(5);
-
-            $this->viewWithLayout('home', [
+            $this->viewWithLayout('users/all_posts', [
                 'posts' => $posts,
-                'pagination' => $pagination,
-                'categories' => $categories,
-                'tags' => $tags,
-                'recentPosts' => $recentPosts,
-                'searchKeyword' => $keyword,
-                'pageTitle' => 'Tìm kiếm: ' . $keyword
+                'totalPosts' => $totalPosts,
+                'totalPages' => $totalPages,
+                'currentPage' => $page,
+                'currentSort' => $sort,
+                'pageTitle' => 'Tất cả bài viết - BlogIT'
+            ]);
+        }
+
+        /**
+         * Trang tìm kiếm
+         */
+        public function search()
+        {
+            $keyword = isset($_GET['q']) ? trim($_GET['q']) : '';
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $perPage = 12;
+
+            $posts = [];
+            $totalPosts = 0;
+            $totalPages = 0;
+
+            if (!empty($keyword)) {
+                $posts = $this->postModel->search($keyword, $page, $perPage);
+                $totalPosts = $this->postModel->countSearch($keyword);
+                $totalPages = ceil($totalPosts / $perPage);
+            }
+
+            $this->viewWithLayout('users/search', [
+                'posts' => $posts,
+                'keyword' => $keyword,
+                'totalPosts' => $totalPosts,
+                'totalPages' => $totalPages,
+                'currentPage' => $page,
+                'pageTitle' => !empty($keyword) ? "Tìm kiếm: {$keyword} - BlogIT" : 'Tìm kiếm - BlogIT'
             ]);
         }
 

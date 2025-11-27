@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="<?php echo Router::url('css/users/about.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/toast.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/users/profile.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/users/user-category.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/users/post-all-search.css'); ?>">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 

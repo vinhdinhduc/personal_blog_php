@@ -58,25 +58,25 @@ function registerAdminRoutes(Router $router)
     // CATEGORIES MANAGEMENT
     // ====================
 
-    // $router->get('/admin/categories', function () {
-    //     $controller = new CategoryController();
-    //     $controller->categories();
-    // });
+    $router->get('/admin/categories', function () {
+        $controller = new CategoryController();
+        $controller->categories();
+    });
 
-    // $router->post('/admin/categories/create', function () {
-    //     $controller = new CategoryController();
-    //     $controller->createCategory();
-    // });
+    $router->post('/admin/categories/create', function () {
+        $controller = new CategoryController();
+        $controller->createCategory();
+    });
 
-    // $router->post('/admin/categories/update/{id}', function ($params) {
-    //     $controller = new CategoryController();
-    //     $controller->updateCategory($params['id']);
-    // });
+    $router->post('/admin/categories/update/{id}', function ($params) {
+        $controller = new CategoryController();
+        $controller->updateCategory($params['id']);
+    });
 
-    // $router->post('/admin/categories/delete/{id}', function ($params) {
-    //     $controller = new CategoryController();
-    //     $controller->deleteCategory($params['id']);
-    // });
+    $router->post('/admin/categories/delete/{id}', function ($params) {
+        $controller = new CategoryController();
+        $controller->deleteCategory($params['id']);
+    });
 
     // ====================
     // TAGS MANAGEMENT
@@ -111,21 +111,45 @@ function registerAdminRoutes(Router $router)
     // COMMENTS MANAGEMENT
     // ====================
 
-    // $router->get('/admin/comments', function () {
-    //     $controller = new CommentController();
-    //     $controller->comments();
-    // });
+    $router->get('/admin/comments', function () {
+        $controller = new AdminCommentController();
+        $controller->comments();
+    });
 
-    // $router->post('/admin/comments/approve/{id}', function ($params) {
-    //     $controller = new CommentController();
-    //     $controller->approveComment($params['id']);
-    // });
+    $router->post('/admin/comments/approve/{id}', function ($params) {
+        $controller = new AdminCommentController();
+        $controller->approveComment($params['id']);
+    });
 
-    // $router->post('/admin/comments/delete/{id}', function ($params) {
-    //     $controller = new CommentController();
-    //     $controller->deleteComment($params['id']);
-    // });
+    $router->post('/admin/comments/unapprove/{id}', function ($params) {
+        $controller = new AdminCommentController();
+        $controller->unapproveComment($params['id']);
+    });
 
+    $router->post('/admin/comments/delete/{id}', function ($params) {
+        $controller = new AdminCommentController();
+        $controller->deleteComment($params['id']);
+    });
+
+    $router->post('/admin/comments/edit/{id}', function ($params) {
+        $controller = new AdminCommentController();
+        $controller->editComment($params['id']);
+    });
+
+    $router->get('/admin/comments/view/{id}', function ($params) {
+        $controller = new AdminCommentController();
+        $controller->viewComment($params['id']);
+    });
+
+    $router->post('/admin/comments/bulk-approve', function () {
+        $controller = new AdminCommentController();
+        $controller->bulkApprove();
+    });
+
+    $router->post('/admin/comments/bulk-delete', function () {
+        $controller = new AdminCommentController();
+        $controller->bulkDelete();
+    });
     // ====================
     // USERS MANAGEMENT
     // ====================

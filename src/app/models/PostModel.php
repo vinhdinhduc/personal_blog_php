@@ -10,7 +10,7 @@ require_once __DIR__ . '/../helpers/Security.php';
 
 class PostModel
 {
-    private $conn;
+    public $conn;
     private $table = 'posts';
 
     public function __construct()
@@ -696,5 +696,26 @@ class PostModel
         $result = $stmt->fetch();
 
         return (int)$result['total'];
+    }
+    /**
+     * Lấy bài viết nổi bật trong category
+     */
+    public function getFeaturedPosts($categoryId, $limit = 3)
+    {
+        $query = "SELECT p.*,
+                         CONCAT(u.first_name, ' ', u.last_name) as author_name
+                  FROM posts p
+                  LEFT JOIN users u ON p.user_id = u.id
+                  WHERE p.category_id = :category_id
+                    AND p.status = 'published'
+                  ORDER BY p.views DESC, p.created_at DESC
+                  LIMIT :limit";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
     }
 }

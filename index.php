@@ -28,6 +28,7 @@ requireFile(__DIR__ . '/src/app/controllers/HomeController.php');
 requireFile(__DIR__ . '/src/app/controllers/AuthController.php');
 requireFile(__DIR__ . '/src/app/controllers/PostController.php');
 requireFile(__DIR__ . '/src/app/controllers/CategoryController.php');
+requireFile(__DIR__ . '/src/app/controllers/AdminCommentController.php');
 requireFile(__DIR__ . '/src/app/controllers/ProfileController.php');
 requireFile(__DIR__ . '/src/app/controllers/AdminController.php');
 requireFile(__DIR__ . '/src/app/controllers/CommentController.php');

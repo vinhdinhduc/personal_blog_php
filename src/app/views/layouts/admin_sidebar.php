@@ -58,13 +58,7 @@
                 </a>
             </li>
 
-            <!-- Media -->
-            <li class="sidebar__menu-item">
-                <a href=<?php echo Router::url('/admin/media'); ?> class="sidebar__menu-link">
-                    <i class="fas fa-images sidebar__menu-icon"></i>
-                    <span class="sidebar__menu-text">Thư viện</span>
-                </a>
-            </li>
+
 
             <!-- Settings -->
             <li class="sidebar__menu-item">

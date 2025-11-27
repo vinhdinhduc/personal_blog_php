@@ -103,14 +103,13 @@ $formAction = $formAction ?? '/admin/posts/store';
 
                     <div class="editor-wrapper">
                         <!-- Quill Editor Container -->
-                        <div id="editor" class="editor-content"><?= $post['content'] ?? '' ?></div>
+                        <div id="editor" class="editor-content"></div>
 
                         <!-- Hidden textarea for form submission -->
                         <textarea name="content"
                             id="editorContent"
                             style="display: none;"
-                            required
-                            name="content"></textarea>
+                            required><?= htmlspecialchars($post['content'] ?? '') ?></textarea>
 
                         <!-- Character Counter -->
                         <div class="editor-counter">

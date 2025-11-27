@@ -14,6 +14,8 @@ $needPostEdit = $needPostEdit ?? false;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="<?php echo Router::url('css/admin/admin.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/admin/user_form.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/admin/comments.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/admin/category.css'); ?>">
 
 
     <link rel="stylesheet" href="<?php echo Router::url('css/admin/post-editor.css'); ?>">
@@ -45,6 +47,8 @@ $needPostEdit = $needPostEdit ?? false;
 
     <script src="<?php echo Router::url('js/toast.js'); ?>"></script>
     <script src="<?php echo Router::url('js/admin.js'); ?>"></script>
+    <script src="<?php echo Router::url('js/admin-comment.js'); ?>"></script>
+    <script src="<?php echo Router::url('js/admin-category.js'); ?>"></script>
     <?php include __DIR__ . '/../partials/toast.php'; ?>
 
     <?php if (isset($additionalJS)): ?>

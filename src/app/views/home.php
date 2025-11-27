@@ -58,7 +58,9 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                 <div class="posts-section">
                     <div class="section-header">
                         <h2>Bài viết mới nhất</h2>
-                        <a href="posts.php" class="view-all">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                        <a href="<?php echo Router::url('/posts'); ?>" class="view-all">
+                            Xem tất cả <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
 
                     <div class="posts-grid">
@@ -125,7 +127,7 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                 <aside class="sidebar">
                     <!-- Search -->
                     <div class="widget search-widget">
-                        <form action="search.php" method="GET" class="search-form">
+                        <form action="<?php echo Router::url('/search'); ?>" method="GET" class="search-form">
                             <input type="text" name="q" placeholder="Tìm kiếm bài viết..." required>
                             <button type="submit"><i class="fas fa-search"></i></button>
                         </form>

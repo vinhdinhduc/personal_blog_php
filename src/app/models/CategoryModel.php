@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../config/database.php';
 
 class CategoryModel
 {
-    private $conn;
+    public $conn;
     private $table = 'categories';
 
     public function __construct()
@@ -112,5 +112,45 @@ class CategoryModel
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
+    }
+
+
+    //Lấy danh mục phổ biến    private function getPopularCategories($limit = 6)
+    public function getPopularCategories($limit = 6)
+    {
+        $query = "SELECT c.*, COUNT(p.id) as post_count
+                  FROM categories c
+                  LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
+                  GROUP BY c.id
+                  HAVING post_count > 0
+                  ORDER BY post_count DESC, c.name ASC
+                  LIMIT :limit";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+    /**
+     * Lấy danh mục liên quan
+     */
+    public function getRelatedCategories($currentCategoryId, $limit = 4)
+    {
+        $query = "SELECT c.*, COUNT(p.id) as post_count
+                  FROM categories c
+                  LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
+                  WHERE c.id != :current_id
+                  GROUP BY c.id
+                  HAVING post_count > 0
+                  ORDER BY RAND()
+                  LIMIT :limit";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':current_id', $currentCategoryId, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
     }
 }

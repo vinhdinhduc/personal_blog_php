@@ -33,14 +33,14 @@
 
                 <?php if (Session::isLoggedIn()): ?>
 
-                    <!-- MENU CHO USER THƯỜNG -->
+
                     <li>
                         <a href="<?php echo Router::url('/profile'); ?>">
                             Hồ sơ
                         </a>
                     </li>
 
-                    <!-- MENU CHỈ ADMIN MỚI THẤY -->
+
                     <?php if (Session::isAdmin()): ?>
                         <li>
                             <a href="<?php echo Router::url('/admin'); ?>" class="admin-link">
@@ -49,7 +49,7 @@
                         </li>
                     <?php endif; ?>
 
-                    <!-- User menu -->
+
                     <li class="user-menu">
                         <div class="user-avatar" title="<?php
                                                         $userData = Session::getUserData();
@@ -134,11 +134,18 @@
         lastScroll = currentScroll;
     });
 
-    // Highlight active link
+    // Active navigation link based on current page
     const currentPath = window.location.pathname;
-    document.querySelectorAll('.nav-menu a').forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
+    const navLinks = document.querySelectorAll('.nav-menu a');
+
+    navLinks.forEach(link => {
+        const linkPath = new URL(link.href).pathname;
+
+        // Exact match hoặc starts with (cho sub-pages)
+        if (linkPath === currentPath) {
             link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
     });
 </script>

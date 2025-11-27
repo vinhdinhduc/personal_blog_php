@@ -19,24 +19,40 @@ function registerPublicRoutes(Router $router)
         $controller->index($params['page']);
     });
 
-    // Xem bài viết
+    // ✅ XEM TẤT CẢ BÀI VIẾT
+    $router->get('/posts', function () {
+        $controller = new HomeController();
+        $controller->allPosts();
+    });
+
+    // ✅ TÌM KIẾM
+    $router->get('/search', function () {
+        $controller = new HomeController();
+        $controller->search();
+    });
+
+    // Xem bài viết chi tiết
     $router->get('/post/{slug}', function ($params) {
         $controller = new PostController();
         $controller->show($params['slug']);
     });
 
+    // Danh sách tất cả categories
+    $router->get('/category', function () {
+        $controller = new CategoryController();
+        $controller->categoryList();
+    });
 
-
-    // Lọc theo category
+    // Chi tiết một category
     $router->get('/category/{slug}', function ($params) {
-        $controller = new HomeController();
-        $controller->byCategory($params['slug']);
+        $controller = new CategoryController();
+        $controller->show($params['slug']);
     });
 
     // Lọc theo category với pagination
     $router->get('/category/{slug}/page/{page}', function ($params) {
-        $controller = new HomeController();
-        $controller->byCategory($params['slug'], $params['page']);
+        $controller = new CategoryController();
+        $controller->show($params['slug'], $params['page']);
     });
 
     // Lọc theo tag
@@ -51,46 +67,36 @@ function registerPublicRoutes(Router $router)
         $controller->byTag($params['slug'], $params['page']);
     });
 
-    // Tìm kiếm
-    $router->get('/search', function () {
-        $controller = new HomeController();
-        $controller->search();
-    });
-
     // Trang giới thiệu
     $router->get('/about', function () {
         $controller = new HomeController();
         $controller->about();
     });
+
+    // Tạo comment
     $router->post('/comment/create', function () {
         $controller = new CommentController();
         $controller->create();
     });
-    //Profile
+
+    // Profile
     $router->get('/profile', function () {
         $controller = new ProfileController();
         $controller->index();
     });
+
     $router->post('/profile/update-info', function () {
         $controller = new ProfileController();
         $controller->updateInfo();
     });
+
     $router->post('/profile/change-password', function () {
         $controller = new ProfileController();
         $controller->changePassword();
     });
-    //update avatar
+
     $router->post('/profile/update-avatar', function () {
         $controller = new ProfileController();
         $controller->updateAvatar();
     });
-
-
-
-
-    // // POST contact form
-    // $router->post('/contact', function () {
-    //     $controller = new HomeController();
-    //     $controller->submitContact();
-    // });
 }

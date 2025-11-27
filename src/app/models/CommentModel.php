@@ -481,4 +481,106 @@ class CommentModel
 
         return (int)$result['total'];
     }
+
+    /**
+     * Get filtered comments với thông tin user, post và pagination
+     * @param string $status 'all', 'pending', 'approved'
+     * @param int|null $postId
+     * @param string $search
+     * @param int $page
+     * @param int $perPage
+     * @return array
+     */
+    public function getFilteredComments($status = 'all', $postId = null, $search = '', $page = 1, $perPage = 20)
+    {
+        $offset = ($page - 1) * $perPage;
+
+        // Build query conditions
+        $conditions = [];
+        $params = [];
+
+        if ($status === 'pending') {
+            $conditions[] = 'c.is_approved = FALSE';
+        } elseif ($status === 'approved') {
+            $conditions[] = 'c.is_approved = TRUE';
+        }
+
+        if ($postId) {
+            $conditions[] = 'c.post_id = :post_id';
+            $params[':post_id'] = $postId;
+        }
+
+        if (!empty($search)) {
+            $conditions[] = '(c.content LIKE :search OR CONCAT(u.first_name, " ", u.last_name) LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
+        }
+
+        $whereClause = empty($conditions) ? '1=1' : implode(' AND ', $conditions);
+
+        // Get total count
+        $countQuery = "SELECT COUNT(*) as total 
+                       FROM comments c 
+                       LEFT JOIN users u ON c.user_id = u.id 
+                       WHERE {$whereClause}";
+
+        $stmt = $this->conn->prepare($countQuery);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        $total = $stmt->fetch()['total'];
+
+        // Get comments
+        $query = "SELECT c.*, 
+                         CONCAT(u.first_name, ' ', u.last_name) as user_name,
+                         u.email as user_email,
+                         p.title as post_title,
+                         p.slug as post_slug,
+                         (SELECT COUNT(*) FROM comments WHERE parent_id = c.id) as reply_count
+                  FROM comments c
+                  LEFT JOIN users u ON c.user_id = u.id
+                  LEFT JOIN posts p ON c.post_id = p.id
+                  WHERE {$whereClause}
+                  ORDER BY c.created_at DESC
+                  LIMIT {$perPage} OFFSET {$offset}";
+
+        $stmt = $this->conn->prepare($query);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        $items = $stmt->fetchAll();
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'total_pages' => ceil($total / $perPage),
+            'has_prev' => $page > 1,
+            'has_next' => $page < ceil($total / $perPage)
+        ];
+    }
+
+    /**
+     * Get replies của một comment kèm thông tin user
+     * @param int $parentId
+     * @return array
+     */
+    public function getRepliesWithUser($parentId)
+    {
+        $query = "SELECT c.*, 
+                         CONCAT(u.first_name, ' ', u.last_name) as user_name,
+                         u.email as user_email
+                  FROM comments c
+                  LEFT JOIN users u ON c.user_id = u.id
+                  WHERE c.parent_id = :parent_id
+                  ORDER BY c.created_at ASC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':parent_id', $parentId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
 }
