@@ -95,11 +95,6 @@ require_once __DIR__ . '/../../helpers/CommentHelper.php';
                     alt="<?= htmlspecialchars($post['title']) ?>">
             </div>
 
-            <!-- Author Avatar -->
-            <div class="author-box__avatar">
-                <img src="<?= ImageHelper::profile($post['author_avatar'], $post['author_email']) ?>"
-                    alt="<?= htmlspecialchars($post['author_name']) ?>">
-            </div>
 
             <!-- Post Content -->
             <div class="post__content">

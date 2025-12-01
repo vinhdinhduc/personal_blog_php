@@ -175,6 +175,40 @@ class CommentController extends BaseController
     }
 
     /**
+     * Show edit form
+     */
+    public function edit($id)
+    {
+        $this->requireAuth();
+
+        $commentModel = new CommentModel();
+        $comment = $commentModel->getById($id);
+
+        if (!$comment) {
+            Session::flash('error', 'Comment không tồn tại');
+            $this->redirect('/');
+            return;
+        }
+
+        if (!$this->canModify($comment)) {
+            Session::flash('error', 'Bạn không có quyền sửa comment này');
+            $this->redirect('/');
+            return;
+        }
+
+        $postSlug = $this->getPostSlugFromComment($comment);
+
+        // Redirect về post với edit mode
+        $this->redirect('/post/' . $postSlug . '?edit_comment=' . $id . '#comment-' . $id);
+    }
+    private function getPostSlugFromComment($comment)
+    {
+        $postModel = new PostModel();
+        $post = $postModel->getById($comment['post_id']);
+        return $post ? $post['slug'] : '';
+    }
+
+    /**
      * Cập nhật comment (chỉ owner)
      * @param int $id
      */
@@ -185,41 +219,49 @@ class CommentController extends BaseController
 
         $commentModel = new CommentModel();
         $comment = $commentModel->getById($id);
+        $postSlug = $this->getPostSlugFromComment($comment);
 
         if (!$comment) {
-            $this->json(['success' => false, 'message' => 'Comment không tồn tại'], 404);
+            Toast::error('Comment không tồn tại');
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         // Chỉ owner hoặc admin mới được sửa
         if (!$this->canModify($comment)) {
-            $this->json(['success' => false, 'message' => 'Bạn không có quyền sửa comment này'], 403);
+            Toast::error('Bạn không có quyền sửa comment này');
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
-            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            Toast::error('Yêu cầu không hợp lệ');
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         $content = trim($this->input('content'));
 
         if (empty($content)) {
-            $this->json(['success' => false, 'message' => 'Nội dung không được trống'], 400);
+            Toast::error('Nội dung không được trống');
+            $this->redirect('/post/' . $postSlug);
+            return;
+        }
+        if (strlen($content) < 3) {
+            Toast::error('Nội dung phải có ít nhất 3 ký tự');
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         $content = Security::sanitize($content);
 
         if ($commentModel->update($id, $content)) {
-            $this->json([
-                'success' => true,
-                'message' => 'Cập nhật comment thành công',
-                'content' => $content
-            ]);
+            Toast::success('success', 'Cập nhật comment thành công');
+            $this->redirect('/post/' . $postSlug . '#comment-' . $id);
         } else {
-            $this->json(['success' => false, 'message' => 'Không thể cập nhật comment'], 500);
+            Toast::error('Không thể cập nhật comment',);
+            $this->redirect('/post/' . $postSlug);
         }
     }
 
@@ -234,40 +276,41 @@ class CommentController extends BaseController
 
         $commentModel = new CommentModel();
         $comment = $commentModel->getById($id);
-
+        $postSlug = $this->getPostSlugFromComment($comment);
         if (!$comment) {
-            $this->json(['success' => false, 'message' => 'Comment không tồn tại'], 404);
+            Toast::error('Comment không tồn tại');
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         // Kiểm tra quyền xóa
         if (!$this->canDelete($comment)) {
-            $this->json(['success' => false, 'message' => 'Bạn không có quyền xóa comment này'], 403);
+            Toast::error('Bạn không có quyền xóa comment này');
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
-            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            Toast::error('Yêu cầu không hợp lệ');
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         // Kiểm tra có replies không
         $replyCount = $commentModel->countReplies($id);
         if ($replyCount > 0) {
-            $this->json([
-                'success' => false,
-                'message' => "Comment này có {$replyCount} câu trả lời. Xóa sẽ xóa tất cả replies.",
-                'confirm_required' => true
-            ], 400);
+            Toast::error("Comment này có {$replyCount} câu trả lời. Xóa sẽ xóa tất cả replies.");
+            $this->redirect('/post/' . $postSlug);
             return;
         }
 
         if ($commentModel->delete($id)) {
-            Session::flash('success', 'Xóa comment thành công');
-            $this->json(['success' => true, 'message' => 'Xóa comment thành công']);
+            Toast::success('Xóa comment thành công');
+            $this->redirect('/post/' . $postSlug);
         } else {
-            $this->json(['success' => false, 'message' => 'Không thể xóa comment'], 500);
+            Toast::error('Không thể xóa comment');
+            $this->redirect('/post/' . $postSlug);
         }
     }
 
@@ -284,27 +327,31 @@ class CommentController extends BaseController
         $comment = $commentModel->getById($id);
 
         if (!$comment) {
-            $this->json(['success' => false, 'message' => 'Comment không tồn tại'], 404);
+            Toast::error('Comment không tồn tại');
+            Router::redirect('/post/' . $comment['post_slug']);
             return;
         }
 
         // Chỉ admin hoặc post author mới approve được
         if (!$this->canApprove($comment)) {
-            $this->json(['success' => false, 'message' => 'Bạn không có quyền phê duyệt comment'], 403);
+            Toast::error('Bạn không có quyền phê duyệt comment này');
+            Router::redirect('/post/' . $comment['post_slug']);
             return;
         }
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
-            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            Toast::error('Yêu cầu không hợp lệ');
+            Router::redirect('/post/' . $comment['post_slug']);
             return;
         }
 
         if ($commentModel->approve($id)) {
-            Session::flash('success', 'Phê duyệt comment thành công');
-            $this->json(['success' => true, 'message' => 'Phê duyệt thành công']);
+            Session::flash('success', 'Đã phê duyệt comment');
+            Router::redirect('/post/' . $comment['post_slug']);
         } else {
-            $this->json(['success' => false, 'message' => 'Không thể phê duyệt'], 500);
+            Toast::error('Không thể phê duyệt comment');
+            Router::redirect('/post/' . $comment['post_slug']);
         }
     }
 
@@ -321,27 +368,31 @@ class CommentController extends BaseController
         $comment = $commentModel->getById($id);
 
         if (!$comment) {
-            $this->json(['success' => false, 'message' => 'Comment không tồn tại'], 404);
+            Toast::error('Comment không tồn tại');
+            Router::redirect('/post/' . $comment['post_slug']);
             return;
         }
 
         // Chỉ admin hoặc post author
         if (!$this->canApprove($comment)) {
-            $this->json(['success' => false, 'message' => 'Bạn không có quyền'], 403);
+            Toast::error('Bạn không có quyền phê duyệt comment này');
+            Router::redirect('/post/' . $comment['post_slug']);
             return;
         }
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
-            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            Toast::error('Yêu cầu không hợp lệ');
+            Router::redirect('/post/' . $comment['post_slug']);
             return;
         }
 
         if ($commentModel->unapprove($id)) {
             Session::flash('success', 'Đã ẩn comment');
-            $this->json(['success' => true, 'message' => 'Đã ẩn comment']);
+            Router::redirect('/post/' . $comment['post_slug']);
         } else {
-            $this->json(['success' => false, 'message' => 'Không thể ẩn comment'], 500);
+            Toast::error('Không thể ẩn comment');
+            Router::redirect('/post/' . $comment['post_slug']);
         }
     }
 

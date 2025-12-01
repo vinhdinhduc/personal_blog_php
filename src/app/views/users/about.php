@@ -24,7 +24,9 @@
         <!-- Our Story -->
         <div class="about-content__grid">
             <div class="about-content__image">
-                <img src="<?= Router::url('images/about/story.jpg') ?>"
+                <img src="<?= Router::url('assets/images/team/image.png') ?>"
+
+
                     alt="Câu chuyện của chúng tôi"
                     loading="lazy">
             </div>
@@ -52,7 +54,8 @@
         <!-- Our Mission -->
         <div class="about-content__grid about-content__grid--reverse">
             <div class="about-content__image">
-                <img src="<?= Router::url('/assets/images/about/mission.jpg') ?>"
+                <img src="<?= Router::url('assets/images/team/image.png') ?>"
+
                     alt="Sứ mệnh của chúng tôi"
                     loading="lazy">
             </div>

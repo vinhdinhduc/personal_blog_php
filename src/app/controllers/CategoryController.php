@@ -79,7 +79,7 @@ class CategoryController extends BaseController
         $relatedCategories = $this->categoryModel->getRelatedCategories($category["id"], 4);
         // Lấy bài viết nổi bật
         $featuredPosts = $this->postModel->getFeaturedPosts($category["id"], 3);
-
+        //Get avatar author cho mỗi bài viết
 
         //Đưa dữ liệu ra view
         $this->viewWithLayout("users/category_detail", [
@@ -117,6 +117,7 @@ class CategoryController extends BaseController
             'parentCategories' => $stats['parent'],
             'totalPosts' => $stats['total_posts'],
             'pageTitle' => 'Quản lý danh mục',
+            "needCategory" => true,
             'csrfToken' => Security::generateCSRFToken()
         ], 'layouts/admin_layout');
     }

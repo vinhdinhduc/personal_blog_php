@@ -1,18 +1,15 @@
 <?php
 
 /**
- * Comment Helper
- * Helper functions để hiển thị comments theo dạng threaded
+ * Comment Helper - NO JAVASCRIPT REQUIRED
+ * Hoàn toàn dùng HTML Form và PHP
  */
 
 class CommentHelper
 {
 
     /**
-     * Render comment tree (đệ quy)
-     * @param array $comments
-     * @param int $depth
-     * @param int $maxDepth
+     * Render comment tree
      */
     public static function renderCommentTree($comments, $depth = 0, $maxDepth = 3)
     {
@@ -23,7 +20,6 @@ class CommentHelper
         foreach ($comments as $comment) {
             self::renderComment($comment, $depth);
 
-            // Render replies nếu có và chưa đạt max depth
             if (!empty($comment['replies']) && $depth < $maxDepth) {
                 echo '<div class="comment-replies ml-4 ml-md-5">';
                 self::renderCommentTree($comment['replies'], $depth + 1, $maxDepth);
@@ -33,25 +29,25 @@ class CommentHelper
     }
 
     /**
-     * Render single comment
-     * @param array $comment
-     * @param int $depth
+     * Render single comment - PURE HTML FORM
      */
     private static function renderComment($comment, $depth)
     {
         $commentId = $comment['id'];
+        $postId = $comment['post_id'];
         $userName = Security::escape($comment['user_name']);
         $content = nl2br(Security::escape($comment['content']));
         $createdAt = self::timeAgo($comment['created_at']);
         $isApproved = $comment['is_approved'];
 
-        // User info
         $currentUserId = Session::getUserId();
         $isOwner = $currentUserId == $comment['user_id'];
         $isAdmin = Session::isAdmin();
-        $canModerate = $isAdmin || Session::getUserId() == $comment['user_id'];
+        $canModerate = $isAdmin || $isOwner;
 
-        // CSS classes
+        // Check if this comment is in edit mode
+        $isEditMode = isset($_GET['edit_comment']) && $_GET['edit_comment'] == $commentId;
+
         $commentClass = 'comment';
         if (!$isApproved) {
             $commentClass .= ' comment-pending';
@@ -59,75 +55,134 @@ class CommentHelper
         if ($depth > 0) {
             $commentClass .= ' comment-reply';
         }
-
 ?>
-        <div class="<?php echo $commentClass; ?>" id="comment-<?php echo $commentId; ?>" data-comment-id="<?php echo $commentId; ?>">
-            <div class="comment-header d-flex align-items-center mb-2">
-                <div class="comment-avatar me-3">
+        <div class="<?php echo $commentClass; ?>" id="comment-<?php echo $commentId; ?>">
+            <div class="comment-header">
+                <div class="comment-avatar">
                     <?php echo self::getAvatar($comment['user_email'], 48); ?>
                 </div>
-                <div class="comment-meta flex-grow-1">
-                    <strong class="comment-author"><?php echo $userName; ?></strong>
-                    <?php if ($isOwner): ?>
-                        <span class="badge bg-primary ms-2">Bạn</span>
-                    <?php endif; ?>
-                    <?php if (!$isApproved): ?>
-                        <span class="badge bg-warning text-dark ms-2">Chờ phê duyệt</span>
-                    <?php endif; ?>
-                    <div class="comment-date text-muted small">
-                        <?php echo $createdAt; ?>
+                <div class="comment-meta">
+                    <div class="comment-author-line">
+                        <strong class="comment-author"><?php echo $userName; ?></strong>
+                        <?php if ($isOwner): ?>
+                            <span class="comment-badge comment-badge--owner">Bạn</span>
+                        <?php endif; ?>
+                        <?php if (!$isApproved): ?>
+                            <span class="comment-badge comment-badge--pending">Chờ phê duyệt</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="comment-date">
+                        <i class="far fa-clock"></i> <?php echo $createdAt; ?>
                     </div>
                 </div>
             </div>
 
-            <div class="comment-content mb-3">
-                <?php echo $content; ?>
-            </div>
+            <!-- Edit Mode -->
+            <?php if ($isEditMode): ?>
+                <div class="comment-edit-form">
+                    <form method="POST" action="<?php echo Router::url('/comment/' . $commentId . '/update'); ?>">
+                        <input type="hidden" name="csrf_token" value="<?php echo Security::generateCSRFToken(); ?>">
+
+                        <textarea name="content" class="form-control" rows="4" required minlength="3" maxlength="5000"><?php echo htmlspecialchars($comment['content']); ?></textarea>
+
+                        <div style="margin-top: 10px;">
+                            <button type="submit" class="btn btn--primary btn--sm">
+                                <i class="fas fa-save"></i> Lưu thay đổi
+                            </button>
+                            <a href="<?php echo Router::url($_SERVER['REQUEST_URI']); ?>"
+                                class="btn btn--secondary btn--sm"
+                                onclick="history.back(); return false;">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            <?php else: ?>
+                <!-- Normal View -->
+                <div class="comment-content">
+                    <?php echo $content; ?>
+                </div>
+            <?php endif; ?>
 
             <div class="comment-actions">
-                <?php if (Session::isLoggedIn() && $depth < 2): ?>
-                    <button class="btn btn-sm btn-link reply-btn" data-comment-id="<?php echo $commentId; ?>">
+                <!-- Reply Button - Toggle form -->
+                <?php if (Session::isLoggedIn() && $depth < 2 && !$isEditMode): ?>
+                    <a href="#reply-form-<?php echo $commentId; ?>"
+                        class="comment-action-btn"
+                        onclick="document.getElementById('reply-form-<?php echo $commentId; ?>').style.display='block'; this.style.display='none'; return false;">
                         <i class="fas fa-reply"></i> Trả lời
-                    </button>
+                    </a>
                 <?php endif; ?>
 
-                <?php if ($canModerate): ?>
-                    <button class="btn btn-sm btn-link text-primary edit-comment-btn" data-comment-id="<?php echo $commentId; ?>">
+                <!-- Edit Button -->
+                <?php if ($canModerate && !$isEditMode): ?>
+                    <a href="<?php echo Router::url('/comment/' . $commentId . '/edit'); ?>"
+                        class="comment-action-btn">
                         <i class="fas fa-edit"></i> Sửa
-                    </button>
-                    <button class="btn btn-sm btn-link text-danger delete-comment-btn" data-comment-id="<?php echo $commentId; ?>">
-                        <i class="fas fa-trash"></i> Xóa
-                    </button>
+                    </a>
                 <?php endif; ?>
 
-                <?php if (($isAdmin || self::isPostAuthor($comment)) && !$isApproved): ?>
-                    <button class="btn btn-sm btn-link text-success approve-comment-btn" data-comment-id="<?php echo $commentId; ?>">
-                        <i class="fas fa-check"></i> Phê duyệt
-                    </button>
+                <!-- Delete Button -->
+                <?php if ($canModerate && !$isEditMode): ?>
+                    <form method="POST"
+                        action="<?php echo Router::url('/comment/' . $commentId . '/delete'); ?>"
+                        style="display: inline;"
+                        onsubmit="return confirm('Bạn có chắc muốn xóa bình luận này?');">
+                        <input type="hidden" name="csrf_token" value="<?php echo Security::generateCSRFToken(); ?>">
+                        <button type="submit" class="comment-action-btn comment-action-btn--danger">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </form>
+                <?php endif; ?>
+
+                <!-- Approve Button -->
+                <?php if (($isAdmin || self::isPostAuthor($comment)) && !$isApproved && !$isEditMode): ?>
+                    <form method="POST"
+                        action="<?php echo Router::url('/comment/' . $commentId . '/approve'); ?>"
+                        style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="<?php echo Security::generateCSRFToken(); ?>">
+                        <button type="submit" class="comment-action-btn comment-action-btn--success">
+                            <i class="fas fa-check"></i> Phê duyệt
+                        </button>
+                    </form>
                 <?php endif; ?>
             </div>
 
-            <!-- Reply form (hidden by default) -->
-            <div class="reply-form mt-3" id="reply-form-<?php echo $commentId; ?>" style="display: none;">
-                <form class="comment-form" data-parent-id="<?php echo $commentId; ?>">
-                    <input type="hidden" name="csrf_token" value="<?php echo Security::generateCSRFToken(); ?>">
-                    <input type="hidden" name="parent_id" value="<?php echo $commentId; ?>">
-                    <textarea name="content" class="form-control" rows="3" placeholder="Viết câu trả lời..." required></textarea>
-                    <div class="mt-2">
-                        <button type="submit" class="btn btn-primary btn-sm">Gửi trả lời</button>
-                        <button type="button" class="btn btn-secondary btn-sm cancel-reply-btn">Hủy</button>
-                    </div>
-                </form>
-            </div>
+            <!-- Reply Form (Hidden by default) -->
+            <?php if (Session::isLoggedIn() && $depth < 2): ?>
+                <div class="reply-form" id="reply-form-<?php echo $commentId; ?>" style="display: none;">
+                    <form method="POST" action="<?php echo Router::url('/comment/create'); ?>">
+                        <input type="hidden" name="csrf_token" value="<?php echo Security::generateCSRFToken(); ?>">
+                        <input type="hidden" name="post_id" value="<?php echo $postId; ?>">
+                        <input type="hidden" name="parent_id" value="<?php echo $commentId; ?>">
+
+                        <textarea name="content"
+                            class="reply-form__textarea"
+                            rows="3"
+                            placeholder="Viết câu trả lời..."
+                            required
+                            minlength="3"
+                            maxlength="5000"></textarea>
+
+                        <div class="reply-form__actions">
+                            <button type="submit" class="btn btn--primary btn--sm">
+                                <i class="fas fa-paper-plane"></i> Gửi trả lời
+                            </button>
+                            <button type="button"
+                                class="btn btn--secondary btn--sm"
+                                onclick="document.getElementById('reply-form-<?php echo $commentId; ?>').style.display='none'; this.parentElement.parentElement.previousElementSibling.querySelector('a').style.display='inline-flex';">
+                                Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            <?php endif; ?>
         </div>
     <?php
     }
 
     /**
      * Get Gravatar avatar
-     * @param string $email
-     * @param int $size
-     * @return string
      */
     private static function getAvatar($email, $size = 48)
     {
@@ -139,8 +194,6 @@ class CommentHelper
 
     /**
      * Format time ago
-     * @param string $datetime
-     * @return string
      */
     private static function timeAgo($datetime)
     {
@@ -165,20 +218,14 @@ class CommentHelper
 
     /**
      * Check if current user is post author
-     * @param array $comment
-     * @return bool
      */
     private static function isPostAuthor($comment)
     {
-        // This should check via database, but for now we'll use a simple check
-        // In production, pass this info from controller
-        return false;
+        return false; // Implement if needed
     }
 
     /**
      * Render comment form
-     * @param int $postId
-     * @param string $buttonText
      */
     public static function renderCommentForm($postId, $buttonText = 'Gửi bình luận')
     {
@@ -189,21 +236,26 @@ class CommentHelper
             return;
         }
 
-        $userName = Session::get('user_data')['name'] ?? 'User';
+        $userData = Session::get('user_data');
+        $userName = ($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? '');
     ?>
         <div class="comment-form-container card mb-4">
             <div class="card-body">
                 <h5 class="card-title mb-3">Để lại bình luận</h5>
-                <p class="text-muted small">Đăng nhập với tên: <strong><?php echo Security::escape($userName); ?></strong></p>
+                <p class="text-muted small">Đăng nhập với tên: <strong><?php echo Security::escape(trim($userName)); ?></strong></p>
 
-                <form id="main-comment-form" class="comment-form" method="POST" action="<?php echo Router::url('/comment/create'); ?>">
+                <form method="POST" action="<?php echo Router::url('/comment/create'); ?>">
                     <input type="hidden" name="csrf_token" value="<?php echo Security::generateCSRFToken(); ?>">
                     <input type="hidden" name="post_id" value="<?php echo $postId; ?>">
 
                     <div class="mb-3">
-                        <textarea name="content" class="form-control" rows="4"
-                            placeholder="Nhập bình luận của bạn..." required
-                            minlength="3" maxlength="5000"></textarea>
+                        <textarea name="content"
+                            class="form-control"
+                            rows="4"
+                            placeholder="Nhập bình luận của bạn..."
+                            required
+                            minlength="3"
+                            maxlength="5000"></textarea>
                         <small class="text-muted">Tối thiểu 3 ký tự, tối đa 5000 ký tự</small>
                     </div>
 
@@ -217,9 +269,7 @@ class CommentHelper
     }
 
     /**
-     * Get comment count display text
-     * @param int $count
-     * @return string
+     * Get comment count text
      */
     public static function getCommentCountText($count)
     {
@@ -233,9 +283,7 @@ class CommentHelper
     }
 
     /**
-     * Calculate total comments including replies
-     * @param array $comments
-     * @return int
+     * Count total comments
      */
     public static function countTotalComments($comments)
     {

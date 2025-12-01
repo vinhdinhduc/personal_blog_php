@@ -24,7 +24,7 @@
 <?php endif; ?>
 
 <!-- Form Container -->
-<form action=<?php echo Router::url("/admin/users/update/{$user['id']}") ?> method="POST" class="user-form">
+<form action=<?php echo Router::url("/admin/users/update/{$user['id']}") ?> method="POST" enctype="multipart/form-data" class="user-form">
     <input type="hidden" name="csrf_token" value="<?= $csrfToken ?? '' ?>">
     <input type="hidden" name="id" value="<?= $user['id'] ?>">
 
@@ -92,7 +92,7 @@
                     <div class="avatar-upload">
                         <div class="avatar-upload__preview" id="avatarPreview">
                             <?php if (!empty($user['avatar'])): ?>
-                                <img src="<?= htmlspecialchars($user['avatar']) ?>"
+                                <img src="<?= Router::url($user['avatar']) ?>"
                                     class="avatar-upload__image"
                                     alt="Avatar">
                             <?php else: ?>
@@ -207,7 +207,11 @@
                 <div class="form-card__body">
                     <div class="user-avatar">
                         <div class="user-avatar__image">
-                            <?= strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? '', 0, 1)) ?>
+                            <?php if (!empty($user['avatar'])): ?>
+                                <img src="<?= Router::url($user['avatar']) ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            <?php else: ?>
+                                <?= strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? '', 0, 1)) ?>
+                            <?php endif; ?>
                         </div>
                         <div class="user-avatar__name">
                             <?= htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?>
@@ -320,6 +324,47 @@
             }
         }
     });
+
+    // Avatar preview
+    function previewAvatar(input) {
+        const preview = document.getElementById('avatarPreview');
+        const removeFlag = document.getElementById('removeAvatarFlag');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" class="avatar-upload__image" alt="Avatar preview">`;
+            };
+
+            reader.readAsDataURL(input.files[0]);
+
+            // Reset remove flag when new image is selected
+            if (removeFlag) {
+                removeFlag.value = '0';
+            }
+        }
+    }
+
+    // Remove avatar
+    function removeAvatar() {
+        if (confirm('Bạn có chắc muốn xóa ảnh đại diện?')) {
+            const preview = document.getElementById('avatarPreview');
+            const removeFlag = document.getElementById('removeAvatarFlag');
+            const input = document.getElementById('avatarInput');
+
+            // Clear file input
+            input.value = '';
+
+            // Show placeholder
+            preview.innerHTML = `<div class="avatar-upload__placeholder"><?= strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? '', 0, 1)) ?></div>`;
+
+            // Set remove flag
+            if (removeFlag) {
+                removeFlag.value = '1';
+            }
+        }
+    }
 
     // Confirm delete
     function confirmDelete(userId) {

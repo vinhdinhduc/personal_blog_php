@@ -131,6 +131,10 @@ function registerAdminRoutes(Router $router)
         $controller->deleteComment($params['id']);
     });
 
+    $router->get('/admin/comments/edit/{id}', function ($params) {
+        $controller = new AdminCommentController();
+        $controller->showEditComment($params['id']);
+    });
     $router->post('/admin/comments/edit/{id}', function ($params) {
         $controller = new AdminCommentController();
         $controller->editComment($params['id']);
@@ -177,10 +181,10 @@ function registerAdminRoutes(Router $router)
         $controller->update($params['id']);
     });
 
-    // $router->post('/admin/users/delete/{id}', function ($params) {
-    //     $controller = new UserController();
-    //     $controller->deleteUser($params['id']);
-    // });
+    $router->post('/admin/users/delete/{id}', function ($params) {
+        $controller = new UserController();
+        $controller->delete($params['id']);
+    });
 
     // $router->get('/admin/users/get/{id}', function ($params) {
     //     $controller = new UserController();

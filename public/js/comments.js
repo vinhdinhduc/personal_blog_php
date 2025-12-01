@@ -1,6 +1,5 @@
 /**
- * Comment System JavaScript
- * Xử lý AJAX cho comments, replies, và moderation
+ * Comment System JavaScript - FIXED & IMPROVED
  */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -8,64 +7,55 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function initCommentSystem() {
-  // Submit comment form (AJAX)
-  const commentForms = document.querySelectorAll(".comment-form");
-  commentForms.forEach((form) => {
+  // Submit comment forms
+  document.querySelectorAll(".comment-form").forEach((form) => {
     form.addEventListener("submit", handleCommentSubmit);
   });
 
   // Reply buttons
-  const replyButtons = document.querySelectorAll(".reply-btn");
-  replyButtons.forEach((btn) => {
+  document.querySelectorAll(".reply-btn").forEach((btn) => {
     btn.addEventListener("click", handleReplyClick);
   });
 
   // Cancel reply buttons
-  const cancelReplyButtons = document.querySelectorAll(".cancel-reply-btn");
-  cancelReplyButtons.forEach((btn) => {
+  document.querySelectorAll(".cancel-reply-btn").forEach((btn) => {
     btn.addEventListener("click", handleCancelReply);
   });
 
-  // Edit comment buttons
-  const editButtons = document.querySelectorAll(".edit-comment-btn");
-  editButtons.forEach((btn) => {
+  // Edit buttons
+  document.querySelectorAll(".edit-comment-btn").forEach((btn) => {
     btn.addEventListener("click", handleEditComment);
   });
 
-  // Delete comment buttons
-  const deleteButtons = document.querySelectorAll(".delete-comment-btn");
-  deleteButtons.forEach((btn) => {
+  // Delete buttons
+  document.querySelectorAll(".delete-comment-btn").forEach((btn) => {
     btn.addEventListener("click", handleDeleteComment);
   });
 
-  // Approve comment buttons
-  const approveButtons = document.querySelectorAll(".approve-comment-btn");
-  approveButtons.forEach((btn) => {
+  // Approve buttons
+  document.querySelectorAll(".approve-comment-btn").forEach((btn) => {
     btn.addEventListener("click", handleApproveComment);
   });
 }
 
 /**
- * Handle comment form submit (AJAX)
+ * Handle comment form submit
  */
 async function handleCommentSubmit(e) {
   e.preventDefault();
 
   const form = e.target;
   const submitBtn = form.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.innerHTML;
   const formData = new FormData(form);
 
-  // Disable submit button
+  // Disable submit
   submitBtn.disabled = true;
-  submitBtn.innerHTML =
-    '<span class="spinner-border spinner-border-sm me-1"></span> Đang gửi...';
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
 
   try {
-    const response = await fetch("/comment/create", {
+    const response = await fetch(form.action, {
       method: "POST",
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-      },
       body: formData,
     });
 
@@ -77,7 +67,7 @@ async function handleCommentSubmit(e) {
       // Reset form
       form.reset();
 
-      // Hide reply form if it's a reply
+      // Hide reply form if exists
       const parentId = formData.get("parent_id");
       if (parentId) {
         const replyForm = document.getElementById(`reply-form-${parentId}`);
@@ -86,27 +76,19 @@ async function handleCommentSubmit(e) {
         }
       }
 
-      // Reload page to show new comment (hoặc append comment nếu không cần approve)
-      if (!data.needs_approval) {
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-      } else {
-        // Comment cần approve - chỉ reload sau 2s
-        setTimeout(() => {
-          location.reload();
-        }, 2000);
-      }
+      // Reload page sau 1s để hiển thị comment mới
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
     } else {
-      showAlert("danger", data.message);
+      showAlert("error", data.message);
     }
   } catch (error) {
     console.error("Error:", error);
-    showAlert("danger", "Có lỗi xảy ra. Vui lòng thử lại.");
+    showAlert("error", "Có lỗi xảy ra. Vui lòng thử lại.");
   } finally {
-    // Re-enable submit button
     submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="fas fa-comment"></i> Gửi bình luận';
+    submitBtn.innerHTML = originalBtnText;
   }
 }
 
@@ -121,16 +103,20 @@ function handleReplyClick(e) {
   if (replyForm) {
     // Hide all other reply forms
     document.querySelectorAll(".reply-form").forEach((form) => {
-      form.style.display = "none";
+      if (form.id !== `reply-form-${commentId}`) {
+        form.style.display = "none";
+      }
     });
 
-    // Show this reply form
-    replyForm.style.display = "block";
-
-    // Focus on textarea
-    const textarea = replyForm.querySelector("textarea");
-    if (textarea) {
-      textarea.focus();
+    // Toggle this reply form
+    if (replyForm.style.display === "none") {
+      replyForm.style.display = "block";
+      const textarea = replyForm.querySelector("textarea");
+      if (textarea) {
+        textarea.focus();
+      }
+    } else {
+      replyForm.style.display = "none";
     }
   }
 }
@@ -143,30 +129,48 @@ function handleCancelReply(e) {
   const replyForm = e.currentTarget.closest(".reply-form");
   if (replyForm) {
     replyForm.style.display = "none";
-    replyForm.querySelector("textarea").value = "";
+    const textarea = replyForm.querySelector("textarea");
+    if (textarea) {
+      textarea.value = "";
+    }
   }
 }
 
 /**
  * Handle edit comment
  */
-async function handleEditComment(e) {
+function handleEditComment(e) {
   e.preventDefault();
   const commentId = e.currentTarget.dataset.commentId;
-  const commentDiv = document.querySelector(`#comment-${commentId}`);
+  const commentDiv = document.getElementById(`comment-${commentId}`);
   const contentDiv = commentDiv.querySelector(".comment-content");
   const currentContent = contentDiv.textContent.trim();
+
+  // Check if already editing
+  if (commentDiv.querySelector(".edit-comment-form")) {
+    return;
+  }
+
+  // Hide actions while editing
+  const actions = commentDiv.querySelector(".comment-actions");
+  actions.style.display = "none";
 
   // Create edit form
   const editForm = document.createElement("div");
   editForm.className = "edit-comment-form";
   editForm.innerHTML = `
-        <textarea class="form-control mb-2" rows="3">${currentContent}</textarea>
-        <button class="btn btn-sm btn-primary save-edit-btn">Lưu</button>
-        <button class="btn btn-sm btn-secondary cancel-edit-btn">Hủy</button>
-    `;
+    <textarea class="form-control" rows="3">${escapeHtml(
+      currentContent
+    )}</textarea>
+    <button class="btn btn--primary btn--sm save-edit-btn">
+      <i class="fas fa-check"></i> Lưu
+    </button>
+    <button class="btn btn--secondary btn--sm cancel-edit-btn">
+      <i class="fas fa-times"></i> Hủy
+    </button>
+  `;
 
-  // Replace content with edit form
+  // Insert after content
   contentDiv.style.display = "none";
   contentDiv.parentNode.insertBefore(editForm, contentDiv.nextSibling);
 
@@ -177,9 +181,13 @@ async function handleEditComment(e) {
       const newContent = editForm.querySelector("textarea").value.trim();
 
       if (!newContent) {
-        showAlert("danger", "Nội dung không được trống");
+        showAlert("error", "Nội dung không được trống");
         return;
       }
+
+      const saveBtn = editForm.querySelector(".save-edit-btn");
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
 
       try {
         const formData = new FormData();
@@ -191,9 +199,6 @@ async function handleEditComment(e) {
 
         const response = await fetch(`/comment/${commentId}/update`, {
           method: "POST",
-          headers: {
-            "X-Requested-With": "XMLHttpRequest",
-          },
           body: formData,
         });
 
@@ -203,19 +208,25 @@ async function handleEditComment(e) {
           showAlert("success", data.message);
           contentDiv.innerHTML = nl2br(escapeHtml(newContent));
           contentDiv.style.display = "block";
+          actions.style.display = "flex";
           editForm.remove();
         } else {
-          showAlert("danger", data.message);
+          showAlert("error", data.message);
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-check"></i> Lưu';
         }
       } catch (error) {
         console.error("Error:", error);
-        showAlert("danger", "Có lỗi xảy ra");
+        showAlert("error", "Có lỗi xảy ra");
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-check"></i> Lưu';
       }
     });
 
   // Handle cancel
   editForm.querySelector(".cancel-edit-btn").addEventListener("click", () => {
     contentDiv.style.display = "block";
+    actions.style.display = "flex";
     editForm.remove();
   });
 }
@@ -240,9 +251,6 @@ async function handleDeleteComment(e) {
 
     const response = await fetch(`/comment/${commentId}/delete`, {
       method: "POST",
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-      },
       body: formData,
     });
 
@@ -251,10 +259,13 @@ async function handleDeleteComment(e) {
     if (data.success) {
       showAlert("success", data.message);
 
-      // Remove comment from DOM
-      const commentDiv = document.querySelector(`#comment-${commentId}`);
+      // Fade out and remove
+      const commentDiv = document.getElementById(`comment-${commentId}`);
       if (commentDiv) {
         commentDiv.style.opacity = "0";
+        commentDiv.style.transform = "translateY(-10px)";
+        commentDiv.style.transition = "all 0.3s ease";
+
         setTimeout(() => {
           commentDiv.remove();
         }, 300);
@@ -262,16 +273,16 @@ async function handleDeleteComment(e) {
     } else {
       if (data.confirm_required) {
         if (confirm(data.message + " Tiếp tục?")) {
-          // User confirmed, delete anyway (implement if needed)
+          // Implement cascade delete if needed
           showAlert("info", "Chức năng xóa cascade chưa implement");
         }
       } else {
-        showAlert("danger", data.message);
+        showAlert("error", data.message);
       }
     }
   } catch (error) {
     console.error("Error:", error);
-    showAlert("danger", "Có lỗi xảy ra");
+    showAlert("error", "Có lỗi xảy ra");
   }
 }
 
@@ -291,9 +302,6 @@ async function handleApproveComment(e) {
 
     const response = await fetch(`/comment/${commentId}/approve`, {
       method: "POST",
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-      },
       body: formData,
     });
 
@@ -302,22 +310,25 @@ async function handleApproveComment(e) {
     if (data.success) {
       showAlert("success", data.message);
 
+      const commentDiv = document.getElementById(`comment-${commentId}`);
+
       // Remove pending badge
-      const commentDiv = document.querySelector(`#comment-${commentId}`);
-      const pendingBadge = commentDiv.querySelector(".badge.bg-warning");
+      const pendingBadge = commentDiv.querySelector(".comment-badge--pending");
       if (pendingBadge) {
         pendingBadge.remove();
       }
+
+      // Remove pending class
       commentDiv.classList.remove("comment-pending");
 
       // Remove approve button
       e.currentTarget.remove();
     } else {
-      showAlert("danger", data.message);
+      showAlert("error", data.message);
     }
   } catch (error) {
     console.error("Error:", error);
-    showAlert("danger", "Có lỗi xảy ra");
+    showAlert("error", "Có lỗi xảy ra");
   }
 }
 
@@ -325,20 +336,43 @@ async function handleApproveComment(e) {
  * Show alert message
  */
 function showAlert(type, message) {
+  // Remove existing alerts
+  document
+    .querySelectorAll(".comment-alert")
+    .forEach((alert) => alert.remove());
+
   const alertDiv = document.createElement("div");
-  alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-  alertDiv.style.cssText =
-    "top: 20px; right: 20px; z-index: 9999; min-width: 300px;";
+  alertDiv.className = `comment-alert comment-alert--${type}`;
   alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+    <div class="comment-alert__icon">
+      ${
+        type === "success"
+          ? '<i class="fas fa-check-circle"></i>'
+          : '<i class="fas fa-exclamation-circle"></i>'
+      }
+    </div>
+    <div class="comment-alert__message">${message}</div>
+    <button class="comment-alert__close">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
 
   document.body.appendChild(alertDiv);
 
-  // Auto remove after 5 seconds
+  // Close button
+  alertDiv
+    .querySelector(".comment-alert__close")
+    .addEventListener("click", () => {
+      alertDiv.classList.add("comment-alert--hide");
+      setTimeout(() => alertDiv.remove(), 300);
+    });
+
+  // Auto remove
   setTimeout(() => {
-    alertDiv.remove();
+    if (alertDiv.parentElement) {
+      alertDiv.classList.add("comment-alert--hide");
+      setTimeout(() => alertDiv.remove(), 300);
+    }
   }, 5000);
 }
 
@@ -357,3 +391,99 @@ function escapeHtml(text) {
 function nl2br(text) {
   return text.replace(/\n/g, "<br>");
 }
+
+// Alert styles
+const alertStyles = document.createElement("style");
+alertStyles.textContent = `
+  .comment-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    animation: slideInRight 0.3s ease;
+    max-width: 400px;
+  }
+
+  .comment-alert--success {
+    border-left: 4px solid #16a34a;
+  }
+
+  .comment-alert--error {
+    border-left: 4px solid #dc2626;
+  }
+
+  .comment-alert__icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .comment-alert--success .comment-alert__icon {
+    color: #16a34a;
+  }
+
+  .comment-alert--error .comment-alert__icon {
+    color: #dc2626;
+  }
+
+  .comment-alert__message {
+    flex: 1;
+    font-size: 0.9375rem;
+    color: #374151;
+  }
+
+  .comment-alert__close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+  }
+
+  .comment-alert__close:hover {
+    color: #374151;
+  }
+
+  .comment-alert--hide {
+    animation: slideOutRight 0.3s ease forwards;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutRight {
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .comment-alert {
+      left: 10px;
+      right: 10px;
+      max-width: none;
+    }
+  }
+`;
+document.head.appendChild(alertStyles);

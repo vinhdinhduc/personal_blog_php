@@ -78,6 +78,35 @@ function registerPublicRoutes(Router $router)
         $controller = new CommentController();
         $controller->create();
     });
+    // Show edit form (GET) - redirect về post với edit mode
+    $router->get('/comment/{id}/edit', function ($params) {
+        $controller = new CommentController();
+        $controller->edit($params['id']);
+    });
+
+    // Update comment (POST)
+    $router->post('/comment/{id}/update', function ($params) {
+        $controller = new CommentController();
+        $controller->update($params['id']);
+    });
+
+    // Delete comment (POST)
+    $router->post('/comment/{id}/delete', function ($params) {
+        $controller = new CommentController();
+        $controller->delete($params['id']);
+    });
+
+    // Approve comment (POST)
+    $router->post('/comment/{id}/approve', function ($params) {
+        $controller = new CommentController();
+        $controller->approve($params['id']);
+    });
+
+    // Unapprove comment (POST)
+    $router->post('/comment/{id}/unapprove', function ($params) {
+        $controller = new CommentController();
+        $controller->unapprove($params['id']);
+    });
 
     // Profile
     $router->get('/profile', function () {

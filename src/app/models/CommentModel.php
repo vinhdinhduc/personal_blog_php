@@ -156,7 +156,7 @@ class CommentModel
      */
     public function getById($id)
     {
-        $query = "SELECT c.*, u.name as user_name, u.email as user_email
+        $query = "SELECT c.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email
                   FROM {$this->table} c
                   LEFT JOIN users u ON c.user_id = u.id
                   WHERE c.id = :id";

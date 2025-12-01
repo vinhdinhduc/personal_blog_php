@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="<?php echo Router::url('css/users/about.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/toast.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/users/profile.css'); ?>">
+    <link rel="stylesheet" href="<?php echo Router::url('css/users/comments.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/users/user-category.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/users/post-all-search.css'); ?>">
 
@@ -32,6 +33,7 @@
     <script src="<?php echo Router::url('js/toast.js'); ?>"></script>
     <script src="<?php echo Router::url('/js/main.js'); ?>"></script>
     <script src="<?php echo Router::url('/js/post-detail.js'); ?>"></script>
+    <!-- <script src="<?php echo Router::url('/js/comments.js'); ?>"></script> -->
     <script src="<?php echo Router::url('/js/profile.js'); ?>"></script>
 
     <?php include __DIR__ . '/../partials/toast.php'; ?>

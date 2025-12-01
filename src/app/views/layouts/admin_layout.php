@@ -1,29 +1,39 @@
 <?php
 $needPostEdit = $needPostEdit ?? false;
-
+$needComments = $needComments ?? false;
+$needCategory = $needCategory ?? false;
+$needUsers = $needUsers ?? false;
 ?>
 <!DOCTYPE html>
-
 <html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?? 'Admin Panel' ?> - Admin Dashboard</title>
+
+    <!-- Common CSS -->
     <link rel="stylesheet" href="<?php echo Router::url('css/toast.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="<?php echo Router::url('css/admin/admin.css'); ?>">
-    <link rel="stylesheet" href="<?php echo Router::url('css/admin/user_form.css'); ?>">
-    <link rel="stylesheet" href="<?php echo Router::url('css/admin/comments.css'); ?>">
-    <link rel="stylesheet" href="<?php echo Router::url('css/admin/category.css'); ?>">
 
+    <!-- Page-specific CSS -->
+    <?php if ($needPostEdit): ?>
+        <link rel="stylesheet" href="<?php echo Router::url('css/admin/post-editor.css'); ?>">
+        <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <?php endif; ?>
 
-    <link rel="stylesheet" href="<?php echo Router::url('css/admin/post-editor.css'); ?>">
-    <!-- Quill Rich Text Editor -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <?php if ($needComments): ?>
+        <link rel="stylesheet" href="<?php echo Router::url('css/admin/comments.css'); ?>">
+    <?php endif; ?>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php if ($needCategory): ?>
+        <link rel="stylesheet" href="<?php echo Router::url('css/admin/category.css'); ?>">
+    <?php endif; ?>
 
+    <?php if ($needUsers): ?>
+        <link rel="stylesheet" href="<?php echo Router::url('css/admin/user_form.css'); ?>">
+    <?php endif; ?>
 
     <?php if (isset($additionalCSS)): ?>
         <?= $additionalCSS ?>
@@ -40,26 +50,30 @@ $needPostEdit = $needPostEdit ?? false;
             </main>
         </div>
     </div>
-    <!-- Post Editor JS -->
 
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script src="<?php echo Router::url('js/post-editor.js'); ?>"></script>
-
+    <!-- Common JS -->
     <script src="<?php echo Router::url('js/toast.js'); ?>"></script>
     <script src="<?php echo Router::url('js/admin.js'); ?>"></script>
-    <script src="<?php echo Router::url('js/admin-comment.js'); ?>"></script>
-    <script src="<?php echo Router::url('js/admin-category.js'); ?>"></script>
+
+    <!-- Page-specific JS -->
+    <?php if ($needPostEdit): ?>
+        <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+        <script src="<?php echo Router::url('js/post-editor.js'); ?>"></script>
+    <?php endif; ?>
+
+    <?php if ($needComments): ?>
+        <script src="<?php echo Router::url('js/admin-comment.js'); ?>"></script>
+    <?php endif; ?>
+
+    <?php if ($needCategory): ?>
+        <script src="<?php echo Router::url('js/admin-category.js'); ?>"></script>
+    <?php endif; ?>
+
     <?php include __DIR__ . '/../partials/toast.php'; ?>
 
     <?php if (isset($additionalJS)): ?>
         <?= $additionalJS ?>
     <?php endif; ?>
-
-
-
-
-
-
 </body>
 
 </html>

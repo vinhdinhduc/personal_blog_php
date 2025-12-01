@@ -1,9 +1,6 @@
 <?php
 
-/**
- * Admin Comment Controller
- * Xử lý quản lý bình luận trong admin panel
- */
+//Xử lý quản lý bình luận trong admin panel
 
 require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../models/CommentModel.php';
@@ -21,25 +18,25 @@ class AdminCommentController extends BaseController
         $this->postModel = new PostModel();
     }
 
-    /**
-     * Hiển thị danh sách comments
-     */
+
+    // Hiển thị danh sách comments
+
     public function comments()
     {
-        // Get filter params
+        // Lấy bộ lọc từ query parameters
         $status = $_GET['status'] ?? 'all';
         $postId = $_GET['post_id'] ?? null;
         $search = $_GET['search'] ?? '';
         $page = (int)($_GET['page'] ?? 1);
         $perPage = 20;
 
-        // Get comments based on filters
+        // Lấy danh sách bình luận dựa trên bộ lọc
         $comments = $this->commentModel->getFilteredComments($status, $postId, $search, $page, $perPage);
 
-        // Get statistics
+        // Lấy thống kê
         $stats = $this->commentModel->getStats();
 
-        // Get recent posts for filter
+        // Lấy bài viết gần đây để lọc
         $recentPosts = $this->postModel->getRecentPosts(20);
 
         $this->viewWithLayout('admin/manage_comments/comment', [
@@ -51,32 +48,50 @@ class AdminCommentController extends BaseController
             'currentPostId' => $postId,
             'searchQuery' => $search,
             'pageTitle' => 'Quản lý bình luận',
+
+            "needComments" => true,
             'csrfToken' => Security::generateCSRFToken()
         ], 'layouts/admin_layout');
     }
 
-    /**
-     * Approve comment
-     */
+    public function showEditComment($id)
+    {
+        $comment = $this->commentModel->getById($id);
+        if (!$comment) {
+            Toast::error('Không tìm thấy bình luận');
+            $this->redirect('/admin/comments');
+            return;
+        }
+
+        $this->viewWithLayout('admin/manage_comments/edit', [
+            'comment' => $comment,
+            'pageTitle' => 'Sửa bình luận',
+            "needComments" => true,
+
+            'csrfToken' => Security::generateCSRFToken()
+        ], 'layouts/admin_layout');
+    }
+
+    // Phê duyệt bình luận
     public function approveComment($id)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Toast::error('Phương thức không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         // Validate CSRF
         if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
             Toast::error('Token không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         $comment = $this->commentModel->getById($id);
         if (!$comment) {
             Toast::error('Không tìm thấy bình luận');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
@@ -86,31 +101,29 @@ class AdminCommentController extends BaseController
             Toast::error('Có lỗi xảy ra khi phê duyệt');
         }
 
-        Router::redirect('/admin/comments');
+        $this->redirect('/admin/comments');
     }
 
-    /**
-     * Unapprove comment
-     */
+    // Ân bình luận
     public function unapproveComment($id)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Toast::error('Phương thức không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         // Validate CSRF
-        if (!Security::generateCSRFToken($_POST['csrf_token'] ?? '')) {
+        if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
             Toast::error('Token không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         $comment = $this->commentModel->getById($id);
         if (!$comment) {
             Toast::error('Không tìm thấy bình luận');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
@@ -120,7 +133,7 @@ class AdminCommentController extends BaseController
             Toast::error('Có lỗi xảy ra');
         }
 
-        Router::redirect('/admin/comments');
+        $this->redirect('/admin/comments');
     }
 
     /**
@@ -130,25 +143,25 @@ class AdminCommentController extends BaseController
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Toast::error('Phương thức không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         // Validate CSRF
-        if (!Security::generateCSRFToken($_POST['csrf_token'] ?? '')) {
+        if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
             Toast::error('Token không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         $comment = $this->commentModel->getById($id);
         if (!$comment) {
             Toast::error('Không tìm thấy bình luận');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
-        // Check if has replies
+        // Đếm số câu trả lời để thông báo
         $replyCount = $this->commentModel->countReplies($id);
 
         if ($this->commentModel->delete($id)) {
@@ -160,24 +173,24 @@ class AdminCommentController extends BaseController
             Toast::error('Có lỗi xảy ra khi xóa');
         }
 
-        Router::redirect('/admin/comments');
+        $this->redirect('/admin/comments');
     }
 
-    /**
-     * Bulk approve
-     */
+    //
+    // Phê duyệt nhiều bình luận
+    //
     public function bulkApprove()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Toast::error('Phương thức không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         // Validate CSRF
-        if (!Security::generateCSRFToken($_POST['csrf_token'] ?? '')) {
+        if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
             Toast::error('Token không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
@@ -185,7 +198,7 @@ class AdminCommentController extends BaseController
 
         if (empty($ids)) {
             Toast::error('Vui lòng chọn ít nhất một bình luận');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
@@ -197,24 +210,23 @@ class AdminCommentController extends BaseController
         }
 
         Toast::success("Đã phê duyệt {$count} bình luận");
-        Router::redirect('/admin/comments');
+        $this->redirect('/admin/comments');
     }
 
-    /**
-     * Bulk delete
-     */
+    // Xóa nhiều bình luận
+    //
     public function bulkDelete()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Toast::error('Phương thức không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
         // Validate CSRF
-        if (!Security::generateCSRFToken($_POST['csrf_token'] ?? '')) {
+        if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
             Toast::error('Token không hợp lệ');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
@@ -222,7 +234,7 @@ class AdminCommentController extends BaseController
 
         if (empty($ids)) {
             Toast::error('Vui lòng chọn ít nhất một bình luận');
-            Router::redirect('/admin/comments');
+            $this->redirect('/admin/comments');
             return;
         }
 
@@ -234,7 +246,7 @@ class AdminCommentController extends BaseController
         }
 
         Toast::success("Đã xóa {$count} bình luận");
-        Router::redirect('/admin/comments');
+        $this->redirect('/admin/comments');
     }
 
 
@@ -245,64 +257,72 @@ class AdminCommentController extends BaseController
     public function editComment($id)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->json(['success' => false, 'message' => 'Phương thức không hợp lệ'], 400);
+            Toast::error('Phương thức không hợp lệ');
+            $this->redirect('/admin/comments');
             return;
         }
 
         // Validate CSRF
         if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
-            $this->json(['success' => false, 'message' => 'Token không hợp lệ'], 403);
+            Toast::error('Token không hợp lệ');
+            $this->redirect('/admin/comments');
             return;
         }
 
         $comment = $this->commentModel->getById($id);
         if (!$comment) {
-            $this->json(['success' => false, 'message' => 'Không tìm thấy bình luận'], 404);
+            Toast::error('Không tìm thấy bình luận');
+            $this->redirect('/admin/comments');
             return;
         }
 
         $content = trim($_POST['content'] ?? '');
         if (empty($content)) {
-            $this->json(['success' => false, 'message' => 'Nội dung không được trống'], 400);
+            Toast::error('Nội dung không được trống');
+            $this->redirect('/admin/comments');
             return;
         }
 
         $content = Security::sanitize($content);
 
         if ($this->commentModel->update($id, $content)) {
-            $this->json([
-                'success' => true,
-                'message' => 'Cập nhật bình luận thành công',
-                'content' => $content
-            ]);
+            Toast::success('Cập nhật bình luận thành công');
+            $this->redirect('/admin/comments');
+            return;
         } else {
-            $this->json(['success' => false, 'message' => 'Có lỗi xảy ra'], 500);
+            Toast::error('Có lỗi xảy ra khi cập nhật bình luận');
+            $this->redirect('/admin/comments');
+            return;
         }
     }
 
-    /**
-     * View comment detail (AJAX)
-     */
+    //
+    // View comment detail 
+    //
     public function viewComment($id)
     {
         $comment = $this->commentModel->getById($id);
 
         if (!$comment) {
-            $this->json(['success' => false, 'message' => 'Không tìm thấy bình luận'], 404);
+            Toast::error('Không tìm thấy bình luận');
+            $this->redirect('/admin/comments');
             return;
         }
 
-        // Get post info
+        // Lấy thông tin bài viết
         $post = $this->postModel->getById($comment['post_id']);
 
-        // Get replies
+        // Lấy câu trả lời
         $replies = $this->commentModel->getRepliesWithUser($id);
 
-        $this->json([
-            'success' => true,
+        $this->viewWithLayout('admin/manage_comments/view_detail', [
             'comment' => $comment,
             'post' => $post,
-            'replies' => $replies
-        ]);
+            'replies' => $replies,
+            'pageTitle' => 'Chi tiết bình luận',
+            "needComments" => true,
+
+            'csrfToken' => Security::generateCSRFToken()
+        ], 'layouts/admin_layout');
     }
 }

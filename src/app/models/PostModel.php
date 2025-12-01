@@ -284,7 +284,9 @@ class PostModel
 
         $query = "SELECT p.*, 
                          CONCAT(u.first_name, ' ', u.last_name) as author_name,
+                         u.avatar as author_avatar,
                          c.name as category_name, 
+
                          c.slug as category_slug
                   FROM {$this->table} p
                   LEFT JOIN users u ON p.user_id = u.id

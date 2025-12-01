@@ -170,7 +170,8 @@ class AuthController extends BaseController
             Session::login($user['id'], $user['role'], [
                 'first_name' => $user['first_name'] ?? '',
                 'last_name' => $user['last_name'] ?? '',
-                'email' => $user['email']
+                'email' => $user['email'],
+                'avatar' => $user['avatar'] ?? ''
             ]);
 
             // Remember me
@@ -350,7 +351,8 @@ class AuthController extends BaseController
                 Session::login($user['id'], $user['role'], [
                     'first_name' => $user['first_name'] ?? '',
                     'last_name' => $user['last_name'] ?? '',
-                    'email' => $user['email']
+                    'email' => $user['email'],
+                    'avatar' => $user['avatar'] ?? ''
                 ]);
             }
         } else {

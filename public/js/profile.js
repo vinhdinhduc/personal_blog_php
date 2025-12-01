@@ -3,12 +3,9 @@
  */
 
 document.addEventListener("DOMContentLoaded", function () {
-  // ====================================
-  // Avatar Upload Handler
-  // ====================================
   const avatarInput = document.getElementById("avatarInput");
   const avatarPreview = document.getElementById("avatarPreview");
-  const avatarWrapper = document.querySelector(".profile-avatar__wrapper");
+  const avatarForm = document.getElementById("avatarForm");
 
   if (avatarInput) {
     avatarInput.addEventListener("change", function (e) {
@@ -16,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!file) return;
 
-      // Validate file type
+      // Validate
       const allowedTypes = [
         "image/jpeg",
         "image/jpg",
@@ -25,250 +22,27 @@ document.addEventListener("DOMContentLoaded", function () {
       ];
       if (!allowedTypes.includes(file.type)) {
         alert("Vui lòng chọn file ảnh (JPG, PNG, GIF)");
+        this.value = "";
         return;
       }
 
-      // Validate file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-      if (file.size > maxSize) {
+      // Check size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
         alert("Kích thước ảnh không được vượt quá 5MB");
+        this.value = "";
         return;
       }
 
-      // Preview image
+      // Preview
       const reader = new FileReader();
       reader.onload = function (event) {
         avatarPreview.src = event.target.result;
       };
       reader.readAsDataURL(file);
 
-      // Upload avatar
-      uploadAvatar(file);
+      // ✅ AUTO SUBMIT FORM
+      avatarForm.submit();
     });
-  }
-
-  function uploadAvatar(file) {
-    const formData = new FormData();
-    formData.append("avatar", file);
-    formData.append(
-      "csrf_token",
-      document.querySelector('input[name="csrf_token"]').value
-    );
-
-    // Add loading state
-    avatarWrapper.classList.add("is-loading");
-
-    // Show loading overlay
-    const loadingOverlay = document.createElement("div");
-    loadingOverlay.className = "profile-avatar__loading";
-    loadingOverlay.innerHTML = '<div class="spinner"></div>';
-    avatarWrapper.appendChild(loadingOverlay);
-
-    fetch("/profile/update-avatar", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          // Update avatar in header if exists
-          const headerAvatar = document.querySelector(".header__avatar img");
-          if (headerAvatar) {
-            headerAvatar.src = data.avatar_url;
-          }
-
-          // Show success message
-          showToast("success", data.message);
-        } else {
-          // Revert preview on error
-          avatarPreview.src =
-            avatarPreview.dataset.original ||
-            "/public/images/default-avatar.png";
-          showToast("error", data.message);
-        }
-      })
-      .catch((error) => {
-        console.error("Upload error:", error);
-        avatarPreview.src =
-          avatarPreview.dataset.original || "/public/images/default-avatar.png";
-        showToast("error", "Có lỗi xảy ra khi tải ảnh lên");
-      })
-      .finally(() => {
-        // Remove loading state
-        avatarWrapper.classList.remove("is-loading");
-        if (loadingOverlay) {
-          loadingOverlay.remove();
-        }
-      });
-  }
-
-  // ====================================
-  // Password Toggle Handler
-  // ====================================
-  const passwordToggles = document.querySelectorAll(
-    ".profile-form__toggle-password"
-  );
-
-  passwordToggles.forEach((toggle) => {
-    toggle.addEventListener("click", function () {
-      const targetId = this.dataset.target;
-      const input = document.getElementById(targetId);
-
-      if (!input) return;
-
-      if (input.type === "password") {
-        input.type = "text";
-        this.innerHTML = `
-                    <svg class="profile-form__eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                    </svg>
-                `;
-      } else {
-        input.type = "password";
-        this.innerHTML = `
-                    <svg class="profile-form__eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                `;
-      }
-    });
-  });
-
-  // ====================================
-  // Password Confirmation Validation
-  // ====================================
-  const newPasswordInput = document.getElementById("new_password");
-  const confirmPasswordInput = document.getElementById("confirm_password");
-
-  if (newPasswordInput && confirmPasswordInput) {
-    confirmPasswordInput.addEventListener("input", function () {
-      if (this.value !== newPasswordInput.value) {
-        this.setCustomValidity("Mật khẩu xác nhận không khớp");
-      } else {
-        this.setCustomValidity("");
-      }
-    });
-
-    newPasswordInput.addEventListener("input", function () {
-      if (
-        confirmPasswordInput.value &&
-        confirmPasswordInput.value !== this.value
-      ) {
-        confirmPasswordInput.setCustomValidity("Mật khẩu xác nhận không khớp");
-      } else {
-        confirmPasswordInput.setCustomValidity("");
-      }
-    });
-  }
-
-  // ====================================
-  // Form Validation
-  // ====================================
-  const forms = document.querySelectorAll(".profile-form");
-
-  forms.forEach((form) => {
-    form.addEventListener("submit", function (e) {
-      if (!form.checkValidity()) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        // Find first invalid input and focus it
-        const firstInvalid = form.querySelector(":invalid");
-        if (firstInvalid) {
-          firstInvalid.focus();
-
-          // Show validation message
-          const message =
-            firstInvalid.validationMessage || "Vui lòng điền đầy đủ thông tin";
-          showToast("error", message);
-        }
-      }
-
-      form.classList.add("was-validated");
-    });
-  });
-
-  // ====================================
-  // Toast Notification Helper
-  // ====================================
-  function showToast(type, message) {
-    // Remove existing toasts
-    const existingToasts = document.querySelectorAll(".profile-toast");
-    existingToasts.forEach((toast) => toast.remove());
-
-    // Create toast element
-    const toast = document.createElement("div");
-    toast.className = `profile-toast profile-toast--${type}`;
-    toast.innerHTML = `
-            <div class="profile-toast__icon">
-                ${
-                  type === "success"
-                    ? `
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                `
-                    : `
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                `
-                }
-            </div>
-            <div class="profile-toast__message">${message}</div>
-            <button class="profile-toast__close">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        `;
-
-    // Add to page
-    document.body.appendChild(toast);
-
-    // Close button
-    toast
-      .querySelector(".profile-toast__close")
-      .addEventListener("click", () => {
-        toast.classList.add("profile-toast--hide");
-        setTimeout(() => toast.remove(), 300);
-      });
-
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      if (toast.parentElement) {
-        toast.classList.add("profile-toast--hide");
-        setTimeout(() => toast.remove(), 300);
-      }
-    }, 5000);
-  }
-
-  // ====================================
-  // Input Character Counter (Optional)
-  // ====================================
-  const inputs = document.querySelectorAll(".profile-form__input[maxlength]");
-
-  inputs.forEach((input) => {
-    const maxLength = input.getAttribute("maxlength");
-    if (maxLength) {
-      const counter = document.createElement("span");
-      counter.className = "profile-form__counter";
-      counter.textContent = `0/${maxLength}`;
-
-      input.parentElement.appendChild(counter);
-
-      input.addEventListener("input", function () {
-        counter.textContent = `${this.value.length}/${maxLength}`;
-      });
-    }
-  });
-
-  // ====================================
-  // Save original avatar URL for revert
-  // ====================================
-  if (avatarPreview) {
-    avatarPreview.dataset.original = avatarPreview.src;
   }
 });
 

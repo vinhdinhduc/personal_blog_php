@@ -44,7 +44,7 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                         <span><i class="fas fa-calendar"></i> <?php echo date('d/m/Y', strtotime($featuredPost['created_at'])); ?></span>
                         <span><i class="fas fa-eye"></i> <?php echo number_format($featuredPost['views']); ?> lượt xem</span>
                     </div>
-                    <a href="post.php?slug=<?php echo $featuredPost['slug']; ?>" class="btn-hero">Đọc ngay</a>
+                    <a href="<?php echo Router::url('/post/' . $featuredPost['slug']); ?>" class="btn-hero">Đọc ngay</a>
                 </div>
             </div>
         </section>

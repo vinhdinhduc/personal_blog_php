@@ -6,9 +6,9 @@ $fullName = trim($firstName . ' ' . $lastName) ?: 'Admin';
 $email = $userData['email'] ?? '';
 $avatar = $userData['avatar'] ?? '';
 
+$defaultAvatar = Router::url('/assets/admin/images/default_avatar.png');
 // Default avatar nếu không có
-$defaultAvatar = Router::url('uploads/default.png');
-$avatarUrl = !empty($avatar) ? htmlspecialchars($avatar) : $defaultAvatar;
+$avatarUrl = !empty($avatar) ? Router::url($avatar) : $defaultAvatar;
 
 // Lấy số lượng thông báo từ session
 $pendingCommentsCount = Session::getPendingCommentsCount();

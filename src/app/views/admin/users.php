@@ -127,7 +127,7 @@
                         <td><?= $user['id'] ?></td>
                         <td>
                             <?php if (!empty($user['avatar'])): ?>
-                                <img src="<?= htmlspecialchars($user['avatar']) ?>"
+                                <img src="<?= Router::url($user['avatar']) ?>"
                                     alt="Avatar"
                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; border: 2px solid var(--primary-color);">
                             <?php else: ?>
@@ -182,12 +182,12 @@
                                 <i class="fas fa-edit"></i>
                             </a>
 
-
-                            <a href="/admin/users/delete/<?= $user['id'] ?>"
-                                class="btn btn--danger btn--sm btn-delete"
+                            <button type="button"
+                                onclick="confirmDeleteUser(<?= $user['id'] ?>)"
+                                class="btn btn--danger btn--sm"
                                 data-tooltip="Xóa">
                                 <i class="fas fa-trash"></i>
-                            </a>
+                            </button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -251,4 +251,24 @@
             checkbox.checked = this.checked;
         });
     });
+
+    // Delete user with confirmation
+    function confirmDeleteUser(userId) {
+        if (confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.')) {
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<?= Router::url('/admin/users/delete/') ?>' + userId;
+
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '<?= $csrfToken ?? '' ?>';
+            form.appendChild(csrfInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
 </script>

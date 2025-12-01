@@ -1,3 +1,8 @@
+<?php
+$getAction = Router::url();
+
+?>
+
 <!-- Page Header -->
 <div class="content__header">
     <h1 class="content__title">Quản lý bình luận</h1>
@@ -70,10 +75,10 @@
             Bộ lọc
         </h2>
         <div class="comment-filters__actions">
-            <button class="btn btn--success btn--sm" onclick="bulkApprove()">
+            <button class="btn btn--success btn--sm" onclick="bulkApprove('<?= $getAction ?>')">
                 <i class="fas fa-check"></i> Duyệt đã chọn
             </button>
-            <button class="btn btn--danger btn--sm" onclick="bulkDelete()">
+            <button class="btn btn--danger btn--sm" onclick="bulkDelete('<?= $getAction ?>')">
                 <i class="fas fa-trash"></i> Xóa đã chọn
             </button>
         </div>
@@ -218,13 +223,15 @@
                                     </form>
                                 <?php endif; ?>
 
-                                <button class="comment-item__action-btn comment-item__action-btn--edit" onclick="editComment(<?= $comment['id'] ?>, <?= htmlspecialchars(json_encode($comment['content'])) ?>)">
+                                <a href="<?php echo Router::url('/admin/comments/edit/' . $comment['id']); ?>"
+                                    class="comment-item__action-btn comment-item__action-btn--edit">
                                     <i class="fas fa-edit"></i> Sửa
-                                </button>
+                                </a>
 
-                                <button class="comment-item__action-btn comment-item__action-btn--view" onclick="viewComment(<?= $comment['id'] ?>)">
+                                <a href="<?php echo Router::url('/admin/comments/view/' . $comment['id']); ?>"
+                                    class="comment-item__action-btn comment-item__action-btn--view">
                                     <i class="fas fa-eye"></i> Chi tiết
-                                </button>
+                                </a>
 
                                 <form method="POST" action="<?php echo Router::url('/admin/comments/delete/' . $comment['id']); ?>" style="display: inline;" onsubmit="return confirmDelete(<?= $comment['reply_count'] ?? 0 ?>)">
                                     <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
@@ -288,50 +295,3 @@
         </div>
     <?php endif; ?>
 </div>
-
-<!-- Edit Comment Modal -->
-<div class="comment-modal" id="editCommentModal">
-    <div class="comment-modal__content">
-        <div class="comment-modal__header">
-            <h3 class="comment-modal__title">Chỉnh sửa bình luận</h3>
-            <button class="comment-modal__close" onclick="closeEditModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="comment-modal__body">
-            <form id="editCommentForm">
-                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
-                <input type="hidden" name="comment_id" id="edit_comment_id">
-                <div class="form-group">
-                    <label class="form-label">Nội dung bình luận</label>
-                    <textarea name="content" id="edit_comment_content" class="form-control" rows="5" required></textarea>
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn--secondary" onclick="closeEditModal()">
-                        Hủy
-                    </button>
-                    <button type="submit" class="btn btn--primary">
-                        <i class="fas fa-save"></i> Lưu thay đổi
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- View Comment Modal -->
-<div class="comment-modal" id="viewCommentModal">
-    <div class="comment-modal__content">
-        <div class="comment-modal__header">
-            <h3 class="comment-modal__title">Chi tiết bình luận</h3>
-            <button class="comment-modal__close" onclick="closeViewModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="comment-modal__body" id="viewCommentContent">
-            <!-- Content will be loaded via JavaScript -->
-        </div>
-    </div>
-</div>
-
-<script src="<?php echo Router::url('js/admin-comments.js'); ?>"></script>

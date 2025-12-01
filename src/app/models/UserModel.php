@@ -79,7 +79,8 @@ class UserModel extends BaseModel
                 "first_name" => $user["first_name"],
                 "last_name" => $user["last_name"],
                 "email" => $user["email"],
-                "role" => $user["role"]
+                "role" => $user["role"],
+                "avatar" => $user["avatar"] ?? ''
             ]
         ];
     }
@@ -172,7 +173,7 @@ class UserModel extends BaseModel
         $allowedFields = ['first_name', 'last_name', 'email', 'role', 'bio', 'phone', 'website', 'avatar', 'status'];
 
         foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
+            if (array_key_exists($field, $data)) { // Dùng array_key_exists để cho phép null
                 $updateData[$field] = $data[$field];
             }
         }

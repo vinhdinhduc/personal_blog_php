@@ -38,6 +38,8 @@ class UserController extends BaseController
             'pagination' => $pagination,
             'totalUsers' => $totalUsers,
             'pageTitle' => 'Quản lý người dùng',
+            "needUsers" => true,
+
             'csrfToken' => Security::generateCSRFToken()
         ], 'layouts/admin_layout');
     }
@@ -49,6 +51,7 @@ class UserController extends BaseController
     {
         $this->viewWithLayout('admin/manage_user/user_create', [
             'pageTitle' => 'Thêm người dùng mới',
+            "needUsers" => true,
             'csrfToken' => Security::generateCSRFToken()
         ], 'layouts/admin_layout');
     }
@@ -115,6 +118,8 @@ class UserController extends BaseController
         $this->viewWithLayout('admin/manage_user/user_edit', [
             'user' => $user,
             'pageTitle' => 'Chỉnh sửa người dùng',
+            "needUsers" => true,
+
             'csrfToken' => Security::generateCSRFToken()
         ], 'layouts/admin_layout');
     }
@@ -140,13 +145,12 @@ class UserController extends BaseController
             return;
         }
 
-        // Handle avatar upload
-        $avatarPath = null;
-        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-            $uploadResult = $this->uploadFile('avatar', 'uploads/avatars/');
-            if ($uploadResult['success']) {
-                $avatarPath = $uploadResult['path'];
-            }
+        // Get current user data
+        $currentUser = $this->userModel->getUserWithStats($id);
+        if (!$currentUser) {
+            Toast::error('Không tìm thấy người dùng');
+            $this->redirect('/admin/users');
+            return;
         }
 
         // Prepare update data
@@ -164,8 +168,29 @@ class UserController extends BaseController
             $updateData['password_confirm'] = $this->input('password_confirm');
         }
 
-        if ($avatarPath) {
-            $updateData['avatar'] = $avatarPath;
+        // Handle avatar removal
+        $removeAvatar = $this->input('remove_avatar', '0');
+        if ($removeAvatar === '1') {
+            // Delete old avatar file if exists
+            if (!empty($currentUser['avatar']) && file_exists($currentUser['avatar'])) {
+                @unlink($currentUser['avatar']);
+            }
+            $updateData['avatar'] = null;
+        }
+        // Handle avatar upload
+        else if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+            $uploadResult = $this->uploadFile('avatar', 'uploads/avatars/');
+            if ($uploadResult['success']) {
+                // Delete old avatar if exists
+                if (!empty($currentUser['avatar']) && file_exists($currentUser['avatar'])) {
+                    @unlink($currentUser['avatar']);
+                }
+                $updateData['avatar'] = $uploadResult['path'];
+            } else {
+                Toast::error($uploadResult['message'] ?? 'Lỗi upload ảnh');
+                $this->redirect('/admin/users/update/' . $id);
+                return;
+            }
         }
 
         // Update through Model
@@ -174,13 +199,14 @@ class UserController extends BaseController
         if ($result['success']) {
             // Update session if editing own profile
             if ($id == Session::getUserId()) {
+                // Lấy thông tin user mới nhất từ database
+                $updatedUser = $this->userModel->getUserById($id);
+
                 $userData = Session::getUserData();
-                $userData['first_name'] = $updateData['first_name'];
-                $userData['last_name'] = $updateData['last_name'];
-                $userData['email'] = $updateData['email'];
-                if ($avatarPath) {
-                    $userData['avatar'] = $avatarPath;
-                }
+                $userData['first_name'] = $updatedUser['first_name'];
+                $userData['last_name'] = $updatedUser['last_name'];
+                $userData['email'] = $updatedUser['email'];
+                $userData['avatar'] = $updatedUser['avatar'] ?? '';
                 Session::set('user_data', $userData);
             }
 
@@ -200,7 +226,8 @@ class UserController extends BaseController
         $this->validateMethod('POST');
 
         if (!$this->validateCSRF()) {
-            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            Toast::error('Token không hợp lệ');
+            $this->redirect('/admin/users');
             return;
         }
 
@@ -208,11 +235,11 @@ class UserController extends BaseController
         $result = $this->userModel->deleteUser($id, Session::getUserId());
 
         if ($result['success']) {
-            Session::flash('success', $result['message']);
-            $this->json($result);
+            Toast::success('Xóa người dùng thành công');
+            $this->redirect('/admin/users');
         } else {
-            Session::flash('error', $result['message']);
-            $this->json($result, 500);
+            Toast::error($result['message']);
+            $this->redirect('/admin/users');
         }
     }
 }

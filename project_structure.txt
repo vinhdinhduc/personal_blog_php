@@ -1,0 +1,190 @@
+Folder PATH listing for volume Rocket 1709 WS
+Volume serial number is 00000067 4693:9EE5
+C:.
+³   .gitignore
+³   .htaccess
+³   index.php
+³   project_structure.txt
+³   README.md
+³   
+ÃÄÄÄ.github
+³   ÀÄÄÄagents
+³           agent.agent.md
+³           
+ÃÄÄÄlogs
+³       debug.log
+³       
+ÃÄÄÄPHPMailer
+³       DSNConfigurator.php
+³       Exception.php
+³       OAuth.php
+³       OAuthTokenProvider.php
+³       PHPMailer.php
+³       POP3.php
+³       SMTP.php
+³       
+ÃÄÄÄpublic
+³   ÃÄÄÄassets
+³   ³   ÀÄÄÄimages
+³   ³       ÀÄÄÄteam
+³   ³               image.png
+³   ³               member1.png
+³   ³               member2.jpg
+³   ³               member3.png
+³   ³               
+³   ÃÄÄÄcss
+³   ³   ³   components.css
+³   ³   ³   style.css
+³   ³   ³   toast.css
+³   ³   ³   
+³   ³   ÃÄÄÄadmin
+³   ³   ³       admin.css
+³   ³   ³       category.css
+³   ³   ³       comments.css
+³   ³   ³       post-editor.css
+³   ³   ³       user_form.css
+³   ³   ³       
+³   ³   ÀÄÄÄusers
+³   ³           about.css
+³   ³           auth.css
+³   ³           comments.css
+³   ³           header_footer.css
+³   ³           home.css
+³   ³           post-all-search.css
+³   ³           post-detail.css
+³   ³           profile.css
+³   ³           user-category.css
+³   ³           
+³   ÃÄÄÄjs
+³   ³       admin-category.js
+³   ³       admin-comment.js
+³   ³       admin.js
+³   ³       comments.js
+³   ³       home.js
+³   ³       main.js
+³   ³       post-detail.js
+³   ³       post-editor.js
+³   ³       profile.js
+³   ³       toast.js
+³   ³       
+³   ÀÄÄÄuploads
+³       ³   default.png
+³       ³   logo.png
+³       ³   
+³       ÃÄÄÄavatars
+³       ³       692945757517a_1764312437.jpg
+³       ³       69294b6dbfe5b_1764313965.jpg
+³       ³       692961ebdd652_1764319723.jpg
+³       ³       692969e030a69_1764321760.jpg
+³       ³       
+³       ÀÄÄÄposts
+³               6923b60e674af_1763948046.jpg
+³               692468237f673_1763993635.png
+³               6928006e03b62_1764229230.jpg
+³               69280779343a0_1764231033.jpg
+³               
+ÀÄÄÄsrc
+    ÃÄÄÄapp
+    ³   ÃÄÄÄcontrollers
+    ³   ³       AdminCommentController.php
+    ³   ³       AdminController.php
+    ³   ³       AuthController.php
+    ³   ³       BaseController.php
+    ³   ³       CategoryController.php
+    ³   ³       CommentController.php
+    ³   ³       HomeController.php
+    ³   ³       PostController.php
+    ³   ³       ProfileController.php
+    ³   ³       TagController.php
+    ³   ³       UserController.php
+    ³   ³       
+    ³   ÃÄÄÄhelpers
+    ³   ³       AutoLoad.php
+    ³   ³       CommentHelper.php
+    ³   ³       EmailHelper.php
+    ³   ³       ImageHelper.php
+    ³   ³       Security.php
+    ³   ³       Session.php
+    ³   ³       ToastHelper.php
+    ³   ³       Validator.php
+    ³   ³       
+    ³   ÃÄÄÄmodels
+    ³   ³       AboutModel.php
+    ³   ³       BaseModel.php
+    ³   ³       CategoryModel.php
+    ³   ³       CommentModel.php
+    ³   ³       PostModel.php
+    ³   ³       ResetPwdModel.php
+    ³   ³       StatisticModel.php
+    ³   ³       TagModel.php
+    ³   ³       UserModel.php
+    ³   ³       
+    ³   ÃÄÄÄroutes
+    ³   ³       admin.php
+    ³   ³       auth.php
+    ³   ³       public.php
+    ³   ³       route.php
+    ³   ³       web.php
+    ³   ³       
+    ³   ÀÄÄÄviews
+    ³       ³   home.php
+    ³       ³   
+    ³       ÃÄÄÄadmin
+    ³       ³   ³   dashboard.php
+    ³       ³   ³   users.php
+    ³       ³   ³   
+    ³       ³   ÃÄÄÄmanage_categories
+    ³       ³   ³       category.php
+    ³       ³   ³       
+    ³       ³   ÃÄÄÄmanage_comments
+    ³       ³   ³       comment.php
+    ³       ³   ³       
+    ³       ³   ÃÄÄÄmanage_user
+    ³       ³   ³       user_create.php
+    ³       ³   ³       user_edit.php
+    ³       ³   ³       
+    ³       ³   ÀÄÄÄposts
+    ³       ³           posts.php
+    ³       ³           post_add.php
+    ³       ³           post_edit.php
+    ³       ³           _form.php
+    ³       ³           
+    ³       ÃÄÄÄauth
+    ³       ³       forgot_password.php
+    ³       ³       login.php
+    ³       ³       register.php
+    ³       ³       reset_password.php
+    ³       ³       
+    ³       ÃÄÄÄerrors
+    ³       ³       404.php
+    ³       ³       
+    ³       ÃÄÄÄhome
+    ³       ÃÄÄÄlayouts
+    ³       ³       admin_header.php
+    ³       ³       admin_layout.php
+    ³       ³       admin_sidebar.php
+    ³       ³       footer.php
+    ³       ³       header.php
+    ³       ³       layout-auth.php
+    ³       ³       main.php
+    ³       ³       
+    ³       ÃÄÄÄpartials
+    ³       ³       comment-item.php
+    ³       ³       toast.php
+    ³       ³       
+    ³       ÃÄÄÄpost
+    ³       ³       view.php
+    ³       ³       
+    ³       ÀÄÄÄusers
+    ³               about.php
+    ³               all_posts.php
+    ³               category_detail.php
+    ³               category_list.php
+    ³               profile.php
+    ³               search.php
+    ³               
+    ÀÄÄÄconfig
+            config.php
+            database.php
+            email.php
+            

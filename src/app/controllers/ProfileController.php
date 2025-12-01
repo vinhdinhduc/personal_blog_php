@@ -94,96 +94,164 @@ class ProfileController extends BaseController
     }
 
     /**
-     * Cập nhật avatar
+     * Cập nhật avatar - FIXED VERSION
+     */
+    /**
+     * Cập nhật avatar - SIMPLE VERSION (không dùng JSON)
      */
     public function updateAvatar()
     {
         $this->validateMethod('POST');
 
         if (!$this->validateCSRF()) {
-            $this->json(['success' => false, 'message' => 'Invalid request'], 403);
+            Toast::error('Invalid request');
+            $this->redirect('/profile');
             return;
         }
 
         $userId = Session::getUserId();
 
-        // ✅ Rate limiting - tránh spam upload
-        $rateLimitKey = 'avatar_upload_' . $userId;
-        if (!Security::rateLimit($rateLimitKey, 5, 300)) { // 5 lần / 5 phút
-            $this->json([
-                'success' => false,
-                'message' => 'Bạn đang upload quá nhanh. Vui lòng chờ 5 phút'
-            ], 429);
+        // ✅ CHECK FILE
+        if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] === UPLOAD_ERR_NO_FILE) {
+            Toast::error('Vui lòng chọn file ảnh');
+            $this->redirect('/profile');
             return;
         }
 
-        // Kiểm tra file upload
-        // if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
-        //     $error = $_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE;
-        //     $message = $this->getUploadErrorMessage($error);
-        //     $this->json(['success' => false, 'message' => $message], 400);
-        //     return;
-        // }
+        if ($_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+            Toast::error('Có lỗi khi tải file lên');
+            $this->redirect('/profile');
+            return;
+        }
 
-        // ✅ Lấy thông tin user để xóa ảnh cũ
+        // ✅ Get user info để xóa ảnh cũ
         $user = $this->userModel->getUserById($userId);
         if (!$user) {
-            $this->json(['success' => false, 'message' => 'User không tồn tại'], 404);
+            Toast::error('User không tồn tại');
+            $this->redirect('/profile');
             return;
         }
 
-        // ✅ Validate file trước khi upload
-        // $validation = $this->validateAvatarFile($_FILES['avatar']);
-        // if (!$validation['success']) {
-        //     $this->json(['success' => false, 'message' => $validation['message']], 400);
-        //     return;
-        // }
-
-        // Upload file
-        $uploadResult = $this->uploadFile('avatar', 'uploads/avatars/', [
-            'resize' => true,
-            'max_width' => 500,
-            'max_height' => 500,
-            'quality' => 85
-        ]);
+        // ✅ Upload file
+        $uploadResult = $this->uploadFile('avatar', 'uploads/avatars/');
 
         if (!$uploadResult['success']) {
-            $this->json(['success' => false, 'message' => $uploadResult['message']], 400);
+            Toast::error($uploadResult['message']);
+            $this->redirect('/profile');
             return;
         }
 
-        // ✅ XÓA ẢNH CŨ trước khi cập nhật
-        if (!empty($user['avatar']) && $user['avatar'] !== 'public/images/default-avatar.png') {
-            $oldAvatarPath = __DIR__ . '/../../' . $user['avatar'];
-            if (file_exists($oldAvatarPath)) {
-                @unlink($oldAvatarPath);
-                error_log("✅ Deleted old avatar: " . $oldAvatarPath);
+        // ✅ XÓA ảnh cũ
+        if (!empty($user['avatar']) && strpos($user['avatar'], 'default-avatar') === false) {
+            $oldPath = __DIR__ . '/../../public/' . ltrim($user['avatar'], '/');
+            if (file_exists($oldPath)) {
+                @unlink($oldPath);
             }
         }
 
-        // Cập nhật vào database
+        // ✅ Update database
         $result = $this->userModel->updateUser($userId, [
             'avatar' => $uploadResult['path']
         ]);
 
         if ($result['success']) {
-            // Cập nhật session
+            // Update session
             $userData = Session::getUserData();
             $userData['avatar'] = $uploadResult['path'];
             Session::set('user_data', $userData);
 
-            $this->json([
-                'success' => true,
-                'message' => 'Cập nhật ảnh đại diện thành công',
-                'avatar_url' => Router::url('/' . $uploadResult['path'])
-            ]);
+            Toast::success('Cập nhật ảnh đại diện thành công');
         } else {
-            // ✅ Xóa file vừa upload nếu không lưu được vào DB
-            if (file_exists(__DIR__ . '/../../' . $uploadResult['path'])) {
-                @unlink(__DIR__ . '/../../' . $uploadResult['path']);
+            // Xóa file vừa upload nếu không lưu được vào DB
+            $uploadedPath = __DIR__ . '/../../public/' . $uploadResult['path'];
+            if (file_exists($uploadedPath)) {
+                @unlink($uploadedPath);
             }
-            $this->json(['success' => false, 'message' => $result['message']], 500);
+            Toast::error($result['message']);
         }
+
+        $this->redirect('/profile');
+    }
+
+    /**
+     * Helper: Resize image
+     */
+    private function resizeImage($filePath, $maxWidth, $maxHeight)
+    {
+        if (!file_exists($filePath)) {
+            return false;
+        }
+
+        $imageInfo = getimagesize($filePath);
+        if (!$imageInfo) {
+            return false;
+        }
+
+        list($width, $height, $type) = $imageInfo;
+
+        // Không cần resize nếu ảnh đã nhỏ hơn
+        if ($width <= $maxWidth && $height <= $maxHeight) {
+            return true;
+        }
+
+        // Calculate new dimensions
+        $ratio = min($maxWidth / $width, $maxHeight / $height);
+        $newWidth = round($width * $ratio);
+        $newHeight = round($height * $ratio);
+
+        // Create image resource
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $source = imagecreatefromjpeg($filePath);
+                break;
+            case IMAGETYPE_PNG:
+                $source = imagecreatefrompng($filePath);
+                break;
+            case IMAGETYPE_GIF:
+                $source = imagecreatefromgif($filePath);
+                break;
+            case IMAGETYPE_WEBP:
+                $source = imagecreatefromwebp($filePath);
+                break;
+            default:
+                return false;
+        }
+
+        // Create new image
+        $destination = imagecreatetruecolor($newWidth, $newHeight);
+
+        // Preserve transparency for PNG/GIF
+        if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF) {
+            imagealphablending($destination, false);
+            imagesavealpha($destination, true);
+            $transparent = imagecolorallocatealpha($destination, 255, 255, 255, 127);
+            imagefilledrectangle($destination, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        // Resize
+        imagecopyresampled($destination, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        // Save
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                imagejpeg($destination, $filePath, 85);
+                break;
+            case IMAGETYPE_PNG:
+                imagepng($destination, $filePath, 8);
+                break;
+            case IMAGETYPE_GIF:
+                imagegif($destination, $filePath);
+                break;
+            case IMAGETYPE_WEBP:
+                imagewebp($destination, $filePath, 85);
+                break;
+        }
+
+        // Clean up
+        imagedestroy($source);
+        imagedestroy($destination);
+
+        return true;
     }
 
     /**

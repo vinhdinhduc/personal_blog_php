@@ -17,6 +17,7 @@ $totalPosts = $totalPosts ?? 0;
 $totalPages = $totalPages ?? 1;
 $currentPage = $currentPage ?? 1;
 $posts = $posts ?? [];
+
 $relatedCategories = $relatedCategories ?? [];
 $featuredPosts = $featuredPosts ?? [];
 ?>
@@ -83,6 +84,7 @@ $featuredPosts = $featuredPosts ?? [];
 
                                     <div class="post-card__meta">
                                         <div class="post-card__author">
+
                                             <img src="<?= ImageHelper::avatar($post['author_avatar'] ?? '') ?>"
                                                 alt="<?= htmlspecialchars($post['author_name'] ?? 'Author') ?>"
                                                 class="post-card__author-avatar">
