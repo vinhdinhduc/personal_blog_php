@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?></title>
+    <link rel="icon" type="image/png" sizes="100x100" href="<?php echo Router::url('/favicon.png'); ?>">
+
+
+
 
     <link rel="stylesheet" href="<?php echo Router::url('css/components.css'); ?>">
     <link rel="stylesheet" href="<?php echo Router::url('css/users/auth.css'); ?>">

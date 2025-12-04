@@ -28,9 +28,7 @@ class AdminController extends BaseController
         $this->commentModel = new CommentModel();
     }
 
-    /**
-     * Dashboard - Trang chủ admin
-     */
+    // Hiển thị dashboard admin
     public function dashboard()
     {
         // Lấy thống kê tổng quan qua Model

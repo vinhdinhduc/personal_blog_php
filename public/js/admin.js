@@ -1,11 +1,4 @@
-/**
- * ADMIN.JS - Modern Admin Dashboard JavaScript
- */
-
 document.addEventListener("DOMContentLoaded", function () {
-  // ============================================
-  // SIDEBAR TOGGLE
-  // ============================================
   const toggleBtn = document.querySelector(".header__toggle");
   const sidebar = document.querySelector(".admin-sidebar");
 
@@ -25,16 +18,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // ============================================
-  // MOBILE SIDEBAR TOGGLE
-  // ============================================
   if (window.innerWidth <= 768) {
     if (toggleBtn && sidebar) {
       toggleBtn.addEventListener("click", function () {
         sidebar.classList.toggle("show");
       });
 
-      // Close sidebar when clicking outside
       document.addEventListener("click", function (e) {
         if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
           sidebar.classList.remove("show");
@@ -43,21 +32,50 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // ============================================
-  // ACTIVE MENU HIGHLIGHTING
-  // ============================================
   const currentPath = window.location.pathname;
   const menuLinks = document.querySelectorAll(".sidebar__menu-link");
 
+  // Clear all active first
+  menuLinks.forEach((link) => link.classList.remove("active"));
+
+  // Find exact match
+  let found = false;
   menuLinks.forEach((link) => {
     const linkPath = new URL(link.href).pathname;
-    console.log("Link path", linkPath);
-    console.log("Current path", currentPath);
-
     if (currentPath === linkPath) {
       link.classList.add("active");
+      found = true;
     }
   });
+
+  // If no exact match, find best parent (but exclude /admin for everything)
+  if (!found) {
+    let bestMatch = null;
+    let longestMatchLength = 0;
+
+    menuLinks.forEach((link) => {
+      const linkPath = new URL(link.href).pathname;
+
+      // Only match specific admin sections, not the general /admin
+      if (linkPath !== "/admin" && currentPath.startsWith(linkPath + "/")) {
+        if (linkPath.length > longestMatchLength) {
+          longestMatchLength = linkPath.length;
+          bestMatch = link;
+        }
+      }
+    });
+
+    if (bestMatch) {
+      bestMatch.classList.add("active");
+    } else {
+      if (currentPath === "/admin" || currentPath.startsWith("/admin/")) {
+        const dashboardLink = document.querySelector('a[href="/admin"]');
+        if (dashboardLink) {
+          dashboardLink.classList.add("active");
+        }
+      }
+    }
+  }
 
   // ============================================
   // CONFIRM DELETE

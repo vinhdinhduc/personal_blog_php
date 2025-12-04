@@ -52,9 +52,15 @@
 
             <!-- Categories -->
             <li class="sidebar__menu-item">
-                <a href=<?php echo Router::url('/admin/categories'); ?> class="sidebar__menu-link">
+                <a href=<?php echo Router::url('/admin/category'); ?> class="sidebar__menu-link">
                     <i class="fas fa-folder sidebar__menu-icon"></i>
                     <span class="sidebar__menu-text">Danh mục</span>
+                </a>
+            </li>
+            <li class="sidebar__menu-item">
+                <a href=<?php echo Router::url('/admin/tags'); ?> data-type="tags" class="sidebar__menu-link">
+                    <i class="fas fa-folder sidebar__menu-icon"></i>
+                    <span class="sidebar__menu-text">Thẻ tags</span>
                 </a>
             </li>
 

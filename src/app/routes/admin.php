@@ -58,7 +58,7 @@ function registerAdminRoutes(Router $router)
     // CATEGORIES MANAGEMENT
     // ====================
 
-    $router->get('/admin/categories', function () {
+    $router->get('/admin/category', function () {
         $controller = new CategoryController();
         $controller->categories();
     });
@@ -78,34 +78,51 @@ function registerAdminRoutes(Router $router)
         $controller->deleteCategory($params['id']);
     });
 
-    // ====================
     // TAGS MANAGEMENT
-    // ====================
+    $router->get('/admin/tags', function () {
+        $controller = new TagController();
+        $controller->index();
+    });
 
-    // $router->get('/admin/tags', function () {
-    //     $controller = new TagController();
-    //     $controller->tags();
-    // });
+    $router->get('/admin/tags/create', function () {
+        $controller = new TagController();
+        $controller->showCreate();
+    });
 
-    // $router->post('/admin/tags/create', function () {
-    //     $controller = new TagController();
-    //     $controller->createTag();
-    // });
+    $router->post('/admin/tags/create', function () {
+        $controller = new TagController();
+        $controller->create();
+    });
 
-    // $router->post('/admin/tags/update/{id}', function ($params) {
-    //     $controller = new TagController();
-    //     $controller->updateTag($params['id']);
-    // });
+    $router->get('/admin/tags/edit/{id}', function ($params) {
+        $controller = new TagController();
+        $controller->showEdit($params['id']);
+    });
 
-    // $router->post('/admin/tags/delete/{id}', function ($params) {
-    //     $controller = new TagController();
-    //     $controller->deleteTag($params['id']);
-    // });
+    $router->post('/admin/tags/update/{id}', function ($params) {
+        $controller = new TagController();
+        $controller->update($params['id']);
+    });
 
-    // $router->post('/admin/tags/bulk-delete', function () {
-    //     $controller = new TagController();
-    //     $controller->bulkDeleteTags();
-    // });
+    $router->post('/admin/tags/delete/{id}', function ($params) {
+        $controller = new TagController();
+        $controller->delete($params['id']);
+    });
+
+    $router->post('/admin/tags/bulk-delete', function () {
+        $controller = new TagController();
+        $controller->bulkDelete();
+    });
+
+    $router->get('/admin/tags/view/{id}', function ($params) {
+        $controller = new TagController();
+        $controller->detail($params['id']);
+    });
+
+    $router->get('/admin/tags/search', function () {
+        $controller = new TagController();
+        $controller->search();
+    });
 
     // ====================
     // COMMENTS MANAGEMENT
@@ -185,23 +202,4 @@ function registerAdminRoutes(Router $router)
         $controller = new UserController();
         $controller->delete($params['id']);
     });
-
-    // $router->get('/admin/users/get/{id}', function ($params) {
-    //     $controller = new UserController();
-    //     $controller->getUser($params['id']);
-    // });
-
-    // ====================
-    // SETTINGS
-    // ====================
-
-    // $router->get('/admin/settings', function () {
-    //     $controller = new CommentController();
-    //     $controller->settings();
-    // });
-
-    // $router->post('/admin/settings/update', function () {
-    //     $controller = new CommentController();
-    //     $controller->updateSettings();
-    // });
 }

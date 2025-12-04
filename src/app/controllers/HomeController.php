@@ -43,7 +43,7 @@
 
             // Pagination
             $pagination = $this->paginate($totalPosts, $page, $perPage);
-
+            $totalPages = ceil($totalPosts / $perPage);
             // Sidebar data
             $categories = $categoryModel->getAll();
             $tags = $tagModel->getAll();
@@ -53,6 +53,9 @@
                 'posts' => $posts,
                 'pagination' => $pagination,
                 'categories' => $categories,
+                "totalPosts" => $totalPosts,
+                'totalPages' => $totalPages,
+                'currentPage' => $page,
                 'tags' => $tags,
                 'recentPosts' => $recentPosts,
                 'pageTitle' => 'Trang chủ'
@@ -126,7 +129,7 @@
 
             // Pagination
             $pagination = $this->paginate($totalPosts, $page, $perPage);
-
+            $totalPages = ceil($totalPosts / $perPage);
             // Sidebar data
             $categories = $categoryModel->getAll();
             $tags = $tagModel->getAll();
@@ -136,6 +139,9 @@
                 'posts' => $posts,
                 'pagination' => $pagination,
                 'categories' => $categories,
+                'totalPosts' => $totalPosts,
+                'totalPages' => $totalPages,
+                'page' => $page,
                 'tags' => $tags,
                 'recentPosts' => $recentPosts,
                 'currentTag' => $tag,
@@ -175,12 +181,20 @@
             $totalPosts = $this->postModel->countPublishedPosts();
             $totalPages = ceil($totalPosts / $perPage);
 
+            // Sidebar data
+            $categories = $this->categoryModel->getAll();
+            $tags = $this->tagModel->getAll();
+            $recentPosts = $this->postModel->getRecentPosts(5);
+
             $this->viewWithLayout('users/all_posts', [
                 'posts' => $posts,
                 'totalPosts' => $totalPosts,
                 'totalPages' => $totalPages,
                 'currentPage' => $page,
                 'currentSort' => $sort,
+                'categories' => $categories,
+                'tags' => $tags,
+                'recentPosts' => $recentPosts,
                 'pageTitle' => 'Tất cả bài viết - BlogIT'
             ]);
         }
@@ -204,12 +218,20 @@
                 $totalPages = ceil($totalPosts / $perPage);
             }
 
+            // Sidebar data
+            $categories = $this->categoryModel->getAll();
+            $tags = $this->tagModel->getAll();
+            $recentPosts = $this->postModel->getRecentPosts(5);
+
             $this->viewWithLayout('users/search', [
                 'posts' => $posts,
                 'keyword' => $keyword,
                 'totalPosts' => $totalPosts,
                 'totalPages' => $totalPages,
                 'currentPage' => $page,
+                'categories' => $categories,
+                'tags' => $tags,
+                'recentPosts' => $recentPosts,
                 'pageTitle' => !empty($keyword) ? "Tìm kiếm: {$keyword} - BlogIT" : 'Tìm kiếm - BlogIT'
             ]);
         }

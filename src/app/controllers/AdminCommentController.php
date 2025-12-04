@@ -251,9 +251,7 @@ class AdminCommentController extends BaseController
 
 
 
-    /**
-     * Edit comment content
-     */
+    //Sửa comment
     public function editComment($id)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

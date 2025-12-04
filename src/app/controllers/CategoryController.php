@@ -130,14 +130,14 @@ class CategoryController extends BaseController
         $this->checkAdminAccess();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Toast::error('Phương thức không hợp lệ');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
         // Validate CSRF
         if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
             Toast::error('Token không hợp lệ');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
@@ -145,7 +145,7 @@ class CategoryController extends BaseController
         $name = trim($_POST['name'] ?? '');
         if (empty($name)) {
             Toast::error('Tên danh mục không được để trống');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
@@ -155,7 +155,7 @@ class CategoryController extends BaseController
         // Kiểm tra slug đã tồn tại
         if ($this->categoryModel->getBySlug($slug)) {
             Toast::error('Slug đã tồn tại, vui lòng chọn slug khác');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
@@ -180,7 +180,7 @@ class CategoryController extends BaseController
             Toast::error('Có lỗi xảy ra khi tạo danh mục');
         }
 
-        Router::redirect('/admin/categories');
+        $this->redirect('/admin/categories');
     }
 
     /**
@@ -191,21 +191,21 @@ class CategoryController extends BaseController
         $this->checkAdminAccess();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Toast::error('Phương thức không hợp lệ');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
         // Validate CSRF
         if (!Security::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
             Toast::error('Token không hợp lệ');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
         $category = $this->categoryModel->getById($id);
         if (!$category) {
             Toast::error('Không tìm thấy danh mục');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
@@ -213,7 +213,7 @@ class CategoryController extends BaseController
         $name = trim($_POST['name'] ?? '');
         if (empty($name)) {
             Toast::error('Tên danh mục không được để trống');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
@@ -224,7 +224,7 @@ class CategoryController extends BaseController
         $existingCategory = $this->categoryModel->getBySlug($slug);
         if ($existingCategory && $existingCategory['id'] != $id) {
             Toast::error('Slug đã tồn tại, vui lòng chọn slug khác');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
@@ -249,7 +249,7 @@ class CategoryController extends BaseController
             Toast::error('Có lỗi xảy ra khi cập nhật danh mục');
         }
 
-        Router::redirect('/admin/categories');
+        $this->redirect('/admin/categories');
     }
 
     /**
@@ -261,14 +261,14 @@ class CategoryController extends BaseController
         $category = $this->categoryModel->getById($id);
         if (!$category) {
             Toast::error('Không tìm thấy danh mục');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
         // Kiểm tra có bài viết không
         if (($category['post_count'] ?? 0) > 0) {
             Toast::warning('Không thể xóa danh mục có bài viết. Vui lòng di chuyển hoặc xóa bài viết trước.');
-            Router::redirect('/admin/categories');
+            $this->redirect('/admin/categories');
             return;
         }
 
@@ -278,7 +278,7 @@ class CategoryController extends BaseController
             Toast::error('Có lỗi xảy ra khi xóa danh mục');
         }
 
-        Router::redirect('/admin/categories');
+        $this->redirect('/admin/categories');
     }
 
     /**

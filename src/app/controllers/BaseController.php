@@ -90,7 +90,7 @@ class BaseController
     //Check quyền admin
     protected function requireAdmin($redirectTo = "/")
     {
-        // Bước 1: Kiểm tra đã đăng nhập chưa
+
         if (!Session::isLoggedIn()) {
             Session::flash('error', 'Vui lòng đăng nhập để tiếp tục.');
             // Lưu URL hiện tại để redirect sau khi login
@@ -99,7 +99,6 @@ class BaseController
             exit;
         }
 
-        // Bước 2: Kiểm tra role
         if (!Session::isAdmin()) {
             Session::flash('error', 'Bạn không có quyền truy cập trang này.');
 
@@ -107,15 +106,10 @@ class BaseController
             exit;
         }
 
-        // Bước 3: Admin có thể truy cập
         return true;
     }
 
-    /**
-     * Check quyền admin hoặc owner của resource
-     * @param int $resourceUserId ID của user sở hữu resource
-     * @param string $redirectTo
-     */
+    //Check quyền admin hoặc owner
     protected function requireAdminOrOwner($resourceUserId, $redirectTo = "/")
     {
         if (!Session::isLoggedIn()) {
@@ -185,7 +179,7 @@ class BaseController
 
     protected function uploadFile($fieldName, $uploadDir = 'uploads/')
     {
-        // ✅ CHECK FILE TỒN TẠI
+        // Check file có tồn tại k
         if (!isset($_FILES[$fieldName])) {
             return [
                 'success' => false,
@@ -195,7 +189,7 @@ class BaseController
 
         $file = $_FILES[$fieldName];
 
-        // ✅ CHECK ERROR
+        // Check lỗi upload
         if ($file['error'] === UPLOAD_ERR_NO_FILE) {
             return [
                 'success' => false,
@@ -218,7 +212,7 @@ class BaseController
             ];
         }
 
-        // Validate file type
+        // Validate kiểu file (chỉ chấp nhận ảnh)
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (!in_array($file['type'], $allowedTypes)) {
             return [
@@ -227,7 +221,7 @@ class BaseController
             ];
         }
 
-        // Validate file size (max 5MB)
+        // Validate kích thước file (tối đa 5MB)
         if ($file['size'] > 5 * 1024 * 1024) {
             return [
                 'success' => false,
@@ -235,18 +229,18 @@ class BaseController
             ];
         }
 
-        // Create upload directory if not exists
+        // Tạo thư mục upload nếu chưa tồn tại
         $uploadPath = __DIR__ . '/../../../public/' . $uploadDir;
         if (!is_dir($uploadPath)) {
             mkdir($uploadPath, 0755, true);
         }
 
-        // Generate unique filename
+        // Tạo tên file duy nhất
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = uniqid() . '_' . time() . '.' . $extension;
         $filepath = $uploadPath . $filename;
 
-        // Move uploaded file
+        // Di chuyển file đã upload
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
             return [
                 'success' => true,

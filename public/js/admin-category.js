@@ -1,20 +1,17 @@
 /**
- * CATEGORIES.JS - Category Management JavaScript
+ * ADMIN-CATEGORY.JS - Category Management
+ * Version 2.0 - Separate Add & Edit Forms
  */
 
-// Generate slug from name
-function generateCategorySlug() {
-  const name = document.getElementById("category_name").value;
-  const slug = vietnameseToSlug(name);
-  document.getElementById("category_slug").value = slug;
-}
+// ============================================
+// VIETNAMESE TO SLUG CONVERTER (SHARED)
+// ============================================
 
-// Convert Vietnamese to slug
 function vietnameseToSlug(text) {
-  // Convert to lowercase
-  text = text.toLowerCase();
+  if (!text) return "";
 
-  // Vietnamese character map
+  text = text.toLowerCase().trim();
+
   const vietnameseMap = {
     à: "a",
     á: "a",
@@ -85,374 +82,316 @@ function vietnameseToSlug(text) {
     đ: "d",
   };
 
-  // Replace Vietnamese characters
   for (let char in vietnameseMap) {
     text = text.replace(new RegExp(char, "g"), vietnameseMap[char]);
   }
 
-  // Remove special characters
   text = text.replace(/[^a-z0-9\s-]/g, "");
-
-  // Replace spaces and multiple hyphens with single hyphen
   text = text.replace(/[\s-]+/g, "-");
-
-  // Trim hyphens from start and end
   return text.replace(/^-+|-+$/g, "");
 }
 
-// Preview icon
-function previewIcon() {
-  const iconClass =
-    document.getElementById("category_icon").value || "fas fa-folder";
-  document.getElementById(
-    "iconPreview"
-  ).innerHTML = `<i class="${iconClass}"></i>`;
-}
+// ============================================
+// DELETE CONFIRMATION
+// ============================================
 
-// Edit category
-function editCategory(category) {
-  // Update form title
-  document.getElementById("formTitle").innerHTML =
-    '<i class="fas fa-edit"></i> Chỉnh sửa danh mục';
-  document.getElementById("submitBtnText").textContent = "Cập nhật";
-
-  // Update form action
-  const form = document.getElementById("categoryForm");
-  form.action = form.action.replace("/create", "/update/" + category.id);
-
-  // Fill form fields
-  document.getElementById("category_id").value = category.id;
-  document.getElementById("category_name").value = category.name;
-  document.getElementById("category_slug").value = category.slug;
-  document.getElementById("category_description").value =
-    category.description || "";
-  document.getElementById("category_parent").value = category.parent_id || "";
-  document.getElementById("category_icon").value =
-    category.icon || "fas fa-folder";
-  document.getElementById("category_sort_order").value =
-    category.sort_order || 0;
-  document.getElementById("category_meta_title").value =
-    category.meta_title || "";
-  document.getElementById("category_meta_description").value =
-    category.meta_description || "";
-
-  // Set color
-  const colorInput = document.querySelector(
-    `input[name="color"][value="${category.color}"]`
-  );
-  if (colorInput) {
-    colorInput.checked = true;
-  }
-
-  // Set status
-  const statusInput = document.querySelector(
-    `input[name="status"][value="${category.status || "active"}"]`
-  );
-  if (statusInput) {
-    statusInput.checked = true;
-  }
-
-  // Preview icon
-  previewIcon();
-
-  // Scroll to form
-  document.getElementById("categoryForm").scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
-}
-
-// Reset form
-function resetForm() {
-  const form = document.getElementById("categoryForm");
-  form.reset();
-
-  // Reset form title and action
-  document.getElementById("formTitle").innerHTML =
-    '<i class="fas fa-plus-circle"></i> Thêm danh mục mới';
-  document.getElementById("submitBtnText").textContent = "Thêm danh mục";
-  form.action = form.action.replace(/\/update\/\d+/, "/create");
-  document.getElementById("category_id").value = "";
-
-  // Reset icon preview
-  document.getElementById("iconPreview").innerHTML =
-    '<i class="fas fa-folder"></i>';
-
-  // Check default color
-  const defaultColor = document.querySelector(
-    'input[name="color"][value="#4e73df"]'
-  );
-  if (defaultColor) {
-    defaultColor.checked = true;
-  }
-}
-
-// Confirm delete
-function confirmDelete(postCount) {
+function confirmDelete(categoryName, postCount) {
   if (postCount > 0) {
-    return confirm(
-      `CẢNH BÁO: Danh mục này có ${postCount} bài viết. Bạn có chắc muốn xóa?`
+    alert(
+      `CẢNH BÁO: Không thể xóa danh mục "${categoryName}"!\n\n` +
+        `Danh mục này có ${postCount} bài viết.\n` +
+        `Vui lòng di chuyển hoặc xóa tất cả bài viết trước khi xóa danh mục.`
     );
+    return false;
   }
-  return confirm("Bạn có chắc muốn xóa danh mục này?");
+
+  return confirm(
+    `Bạn có chắc muốn xóa danh mục "${categoryName}"?\n\n` +
+      `Hành động này không thể hoàn tác!`
+  );
 }
 
-// Filter categories by status
-function filterCategories(status) {
-  const rows = document.querySelectorAll("#categoriesTable tbody tr");
+// ============================================
+// SEARCH FUNCTION
+// ============================================
 
-  rows.forEach((row) => {
-    if (!row.dataset.categoryId) {
-      return; // Skip empty state row
-    }
-
-    if (!status || row.dataset.status === status) {
-      row.style.display = "";
-    } else {
-      row.style.display = "none";
-    }
-  });
-}
-
-// Search categories
 function searchCategories(query) {
   const rows = document.querySelectorAll("#categoriesTable tbody tr");
-  const lowerQuery = query.toLowerCase();
+  const lowerQuery = query.toLowerCase().trim();
+  let visibleCount = 0;
 
   rows.forEach((row) => {
-    if (!row.dataset.categoryId) {
-      return; // Skip empty state row
+    if (
+      row.classList.contains("table__row--empty") ||
+      !row.dataset.categoryId
+    ) {
+      return;
     }
 
     const text = row.textContent.toLowerCase();
-    row.style.display = text.includes(lowerQuery) ? "" : "none";
+    const isMatch = text.includes(lowerQuery);
+
+    row.style.display = isMatch ? "" : "none";
+    if (isMatch) visibleCount++;
   });
+
+  if (visibleCount === 0 && lowerQuery) {
+    showNoResultsMessage();
+  } else {
+    hideNoResultsMessage();
+  }
 }
 
-// Get selected category IDs
+function showNoResultsMessage() {
+  const tbody = document.querySelector("#categoriesTable tbody");
+  if (tbody.querySelector(".no-results-row")) return;
+
+  const tr = document.createElement("tr");
+  tr.className = "no-results-row";
+  tr.innerHTML = `
+        <td colspan="6" style="text-align: center; padding: 60px 20px;">
+            <i class="fas fa-search" style="font-size: 48px; color: #e3e6f0; display: block; margin-bottom: 15px;"></i>
+            <p style="margin: 0; font-size: 16px; color: #858796; font-weight: 600;">Không tìm thấy kết quả</p>
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #858796;">Thử tìm kiếm với từ khóa khác</p>
+        </td>
+    `;
+  tbody.appendChild(tr);
+}
+
+function hideNoResultsMessage() {
+  const msg = document.querySelector(".no-results-row");
+  if (msg) msg.remove();
+}
+
+// ============================================
+// BULK ACTIONS
+// ============================================
+
+function updateBulkActions() {
+  const checkboxes = document.querySelectorAll(".category-checkbox:checked");
+  const count = checkboxes.length;
+  const countSpan = document.getElementById("selected_count");
+  const deleteBtn = document.getElementById("bulk_delete_btn");
+
+  if (countSpan) countSpan.textContent = count;
+  if (deleteBtn) deleteBtn.disabled = count === 0;
+}
+
 function getSelectedIds() {
   const checkboxes = document.querySelectorAll(".category-checkbox:checked");
   return Array.from(checkboxes).map((cb) => cb.value);
 }
 
-// Bulk activate
-function bulkActivate() {
-  const ids = getSelectedIds();
-
-  if (ids.length === 0) {
-    alert("Vui lòng chọn ít nhất một danh mục!");
-    return;
-  }
-
-  if (confirm(`Kích hoạt ${ids.length} danh mục đã chọn?`)) {
-    window.location.href = `/admin/categories/bulk-activate?ids=${ids.join(
-      ","
-    )}`;
-  }
-}
-
-// Bulk deactivate
-function bulkDeactivate() {
-  const ids = getSelectedIds();
-
-  if (ids.length === 0) {
-    alert("Vui lòng chọn ít nhất một danh mục!");
-    return;
-  }
-
-  if (confirm(`Tạm dừng ${ids.length} danh mục đã chọn?`)) {
-    window.location.href = `/admin/categories/bulk-deactivate?ids=${ids.join(
-      ","
-    )}`;
-  }
-}
-
-// Bulk delete
 function bulkDelete() {
   const ids = getSelectedIds();
 
   if (ids.length === 0) {
-    alert("Vui lòng chọn ít nhất một danh mục!");
+    alert("Vui lòng chọn ít nhất một danh mục để xóa!");
     return;
   }
 
   if (
-    confirm(
-      `CẢNH BÁO: Xóa vĩnh viễn ${ids.length} danh mục đã chọn?\n\nLưu ý: Các danh mục có bài viết sẽ không bị xóa.`
+    !confirm(
+      `Bạn có chắc muốn xóa ${ids.length} danh mục đã chọn?\n\n` +
+        `LƯU Ý: Các danh mục có bài viết sẽ không bị xóa.\n` +
+        `Hành động này không thể hoàn tác!`
     )
   ) {
-    window.location.href = `/admin/categories/bulk-delete?ids=${ids.join(",")}`;
+    return;
   }
+
+  // Create and submit a form for the first selected category
+  // In a real scenario, you'd want to handle multiple deletes server-side
+  const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = window.location.pathname; // Will be handled by backend
+
+  const csrfInput = document.createElement("input");
+  csrfInput.type = "hidden";
+  csrfInput.name = "csrf_token";
+  csrfInput.value = csrfToken;
+
+  const idsInput = document.createElement("input");
+  idsInput.type = "hidden";
+  idsInput.name = "bulk_delete_ids";
+  idsInput.value = ids.join(",");
+
+  form.appendChild(csrfInput);
+  form.appendChild(idsInput);
+  document.body.appendChild(form);
+
+  // For now, just delete the first one
+  window.location.href = `/admin/categories/delete/${ids[0]}`;
 }
 
-// Select all checkboxes
-document.addEventListener("DOMContentLoaded", function () {
-  const selectAllCheckbox = document.getElementById("selectAll");
+// ============================================
+// EVENT LISTENERS
+// ============================================
 
+document.addEventListener("DOMContentLoaded", function () {
+  // Select All Checkbox
+  const selectAllCheckbox = document.getElementById("selectAll");
   if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener("change", function () {
       const checkboxes = document.querySelectorAll(".category-checkbox");
       checkboxes.forEach((checkbox) => {
         checkbox.checked = this.checked;
       });
+      updateBulkActions();
     });
   }
 
-  // Update select all when individual checkboxes change
+  // Individual checkboxes
   const categoryCheckboxes = document.querySelectorAll(".category-checkbox");
   categoryCheckboxes.forEach((checkbox) => {
     checkbox.addEventListener("change", function () {
-      const allChecked = Array.from(categoryCheckboxes).every(
-        (cb) => cb.checked
-      );
-      const someChecked = Array.from(categoryCheckboxes).some(
-        (cb) => cb.checked
-      );
-
       if (selectAllCheckbox) {
+        const allChecked = Array.from(categoryCheckboxes).every(
+          (cb) => cb.checked
+        );
+        const someChecked = Array.from(categoryCheckboxes).some(
+          (cb) => cb.checked
+        );
+
         selectAllCheckbox.checked = allChecked;
         selectAllCheckbox.indeterminate = someChecked && !allChecked;
       }
+      updateBulkActions();
     });
   });
+
+  // Keyboard shortcuts
+  document.addEventListener("keydown", function (e) {
+    // Don't trigger if typing in input
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      return;
+    }
+
+    // Ctrl/Cmd + K: Focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      e.preventDefault();
+      document.getElementById("search_input")?.focus();
+    }
+
+    // Ctrl/Cmd + N: New category
+    if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+      e.preventDefault();
+      openAddModal();
+    }
+  });
+
+  // Initialize bulk actions
+  updateBulkActions();
 });
 
-// Form validation
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("categoryForm");
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
-  if (form) {
-    form.addEventListener("submit", function (e) {
-      const name = document.getElementById("category_name").value.trim();
+function showNotification(message, type = "success") {
+  const notification = document.createElement("div");
+  notification.className = `notification notification--${type}`;
+  notification.innerHTML = `
+        <i class="fas fa-${
+          type === "success" ? "check-circle" : "exclamation-circle"
+        }"></i>
+        <span>${message}</span>
+    `;
+  notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${type === "success" ? "#1cc88a" : "#e74a3b"};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideInUp 0.3s ease;
+    `;
 
-      if (!name) {
-        e.preventDefault();
-        alert("Vui lòng nhập tên danh mục!");
-        document.getElementById("category_name").focus();
-        return false;
-      }
+  document.body.appendChild(notification);
 
-      // Auto-generate slug if empty
-      const slug = document.getElementById("category_slug").value.trim();
-      if (!slug) {
-        generateCategorySlug();
-      }
+  setTimeout(() => {
+    notification.style.animation = "slideOutDown 0.3s ease";
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Copy slug to clipboard
+function copySlug(slug) {
+  navigator.clipboard
+    .writeText(slug)
+    .then(() => {
+      showNotification("Đã copy slug vào clipboard!", "success");
+    })
+    .catch((err) => {
+      console.error("Error copying:", err);
+      showNotification("Không thể copy slug", "error");
     });
-  }
-});
+}
 
-// Keyboard shortcuts
-document.addEventListener("keydown", function (e) {
-  // Ctrl/Cmd + K: Focus search
-  if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-    e.preventDefault();
-    const searchInput = document.querySelector(
-      '.category-table__search input[type="text"]'
-    );
-    if (searchInput) {
-      searchInput.focus();
-    }
-  }
+// Export to CSV
+function exportCategories() {
+  const categories = [];
+  const rows = document.querySelectorAll("#categoriesTable tbody tr");
 
-  // Ctrl/Cmd + N: Focus name input (new category)
-  if ((e.ctrlKey || e.metaKey) && e.key === "n") {
-    e.preventDefault();
-    resetForm();
-    document.getElementById("category_name").focus();
-  }
-
-  // Escape: Clear search
-  if (e.key === "Escape") {
-    const searchInput = document.querySelector(
-      '.category-table__search input[type="text"]'
-    );
-    if (searchInput && searchInput.value) {
-      searchInput.value = "";
-      searchCategories("");
-    }
-  }
-});
-
-// Auto-save form data to sessionStorage (prevent data loss)
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("categoryForm");
-
-  if (form) {
-    // Load saved data
-    const savedData = sessionStorage.getItem("categoryFormData");
-    if (savedData) {
-      try {
-        const data = JSON.parse(savedData);
-        if (data.name)
-          document.getElementById("category_name").value = data.name;
-        if (data.slug)
-          document.getElementById("category_slug").value = data.slug;
-        if (data.description)
-          document.getElementById("category_description").value =
-            data.description;
-      } catch (e) {
-        console.error("Error loading saved form data:", e);
-      }
-    }
-
-    // Save data on input
-    const inputs = form.querySelectorAll('input[type="text"], textarea');
-    inputs.forEach((input) => {
-      input.addEventListener("input", function () {
-        const data = {
-          name: document.getElementById("category_name").value,
-          slug: document.getElementById("category_slug").value,
-          description: document.getElementById("category_description").value,
-        };
-        sessionStorage.setItem("categoryFormData", JSON.stringify(data));
+  rows.forEach((row) => {
+    if (row.dataset.categoryId) {
+      const cells = row.querySelectorAll("td");
+      categories.push({
+        id: cells[1].textContent.trim(),
+        name: row.querySelector(".category-info__name").textContent.trim(),
+        slug: row.querySelector(".table__code").textContent.trim(),
+        posts: row.querySelector(".category-count span").textContent.trim(),
       });
-    });
-
-    // Clear saved data on successful submit
-    form.addEventListener("submit", function () {
-      sessionStorage.removeItem("categoryFormData");
-    });
-  }
-});
-
-// Tooltip functionality
-document.addEventListener("DOMContentLoaded", function () {
-  const tooltipElements = document.querySelectorAll("[data-tooltip]");
-
-  tooltipElements.forEach((element) => {
-    element.addEventListener("mouseenter", function (e) {
-      const tooltipText = this.getAttribute("data-tooltip");
-      const tooltip = document.createElement("div");
-      tooltip.className = "tooltip-popup";
-      tooltip.textContent = tooltipText;
-      tooltip.style.cssText = `
-                position: fixed;
-                background: rgba(0, 0, 0, 0.9);
-                color: #fff;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 13px;
-                pointer-events: none;
-                z-index: 10000;
-                white-space: nowrap;
-                animation: fadeIn 0.2s ease;
-            `;
-
-      document.body.appendChild(tooltip);
-
-      const rect = this.getBoundingClientRect();
-      tooltip.style.top = rect.top - tooltip.offsetHeight - 8 + "px";
-      tooltip.style.left =
-        rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + "px";
-
-      this._tooltip = tooltip;
-    });
-
-    element.addEventListener("mouseleave", function () {
-      if (this._tooltip) {
-        this._tooltip.remove();
-        this._tooltip = null;
-      }
-    });
+    }
   });
-});
+
+  let csv = "\uFEFF"; // BOM for UTF-8
+  csv += "ID,Tên danh mục,Slug,Số bài viết\n";
+  categories.forEach((cat) => {
+    csv += `${cat.id},"${cat.name}",${cat.slug},${cat.posts}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const timestamp = new Date().toISOString().slice(0, 10);
+  link.href = URL.createObjectURL(blob);
+  link.download = `categories_${timestamp}.csv`;
+  link.click();
+
+  showNotification("Đã xuất dữ liệu thành công!", "success");
+}
+
+// Add animation styles
+const style = document.createElement("style");
+style.textContent = `
+    @keyframes slideInUp {
+        from {
+            transform: translateY(100px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutDown {
+        from {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateY(100px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);

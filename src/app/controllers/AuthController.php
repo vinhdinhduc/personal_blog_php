@@ -166,7 +166,7 @@ class AuthController extends BaseController
         if ($result['success']) {
             $user = $result['user'];
 
-            // Set session với role
+            // Lưu thông tin vào session
             Session::login($user['id'], $user['role'], [
                 'first_name' => $user['first_name'] ?? '',
                 'last_name' => $user['last_name'] ?? '',
@@ -325,9 +325,7 @@ class AuthController extends BaseController
         setcookie('remember_user', $userId, $expire, '/', '', true, true);
     }
 
-    /**
-     * Check remember me cookie và auto login
-     */
+    // Kiểm tra và xử lý Remember Me
     public function checkRememberMe()
     {
         if (Session::isLoggedIn()) {
@@ -408,7 +406,7 @@ class AuthController extends BaseController
         }
 
         if (!$this->validateCSRF()) {
-            Toast::error('Invalid request');
+            Toast::error('Request không hợp lệ');
             $this->redirect('/reset-password');
             return;
         }

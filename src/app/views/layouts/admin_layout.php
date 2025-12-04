@@ -3,6 +3,7 @@ $needPostEdit = $needPostEdit ?? false;
 $needComments = $needComments ?? false;
 $needCategory = $needCategory ?? false;
 $needUsers = $needUsers ?? false;
+$needTags = $needTags ?? false;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -11,6 +12,7 @@ $needUsers = $needUsers ?? false;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?? 'Admin Panel' ?> - Admin Dashboard</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo Router::url('/favicon.png'); ?>">
 
     <!-- Common CSS -->
     <link rel="stylesheet" href="<?php echo Router::url('css/toast.css'); ?>">
@@ -33,6 +35,9 @@ $needUsers = $needUsers ?? false;
 
     <?php if ($needUsers): ?>
         <link rel="stylesheet" href="<?php echo Router::url('css/admin/user_form.css'); ?>">
+    <?php endif; ?>
+    <?php if ($needTags): ?>
+        <link rel="stylesheet" href="<?php echo Router::url('css/admin/tag.css'); ?>">
     <?php endif; ?>
 
     <?php if (isset($additionalCSS)): ?>
@@ -68,7 +73,9 @@ $needUsers = $needUsers ?? false;
     <?php if ($needCategory): ?>
         <script src="<?php echo Router::url('js/admin-category.js'); ?>"></script>
     <?php endif; ?>
-
+    <?php if ($needTags): ?>
+        <script src="<?php echo Router::url('js/admin-tags.js'); ?>"></script>
+    <?php endif; ?>
     <?php include __DIR__ . '/../partials/toast.php'; ?>
 
     <?php if (isset($additionalJS)): ?>

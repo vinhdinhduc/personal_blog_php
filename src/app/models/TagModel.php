@@ -415,13 +415,7 @@ class TagModel
      */
     public function bulkDelete($ids)
     {
-        if (empty($ids)) {
-            return [
-                'success' => false,
-                'deleted_count' => 0,
-                'message' => 'Không có tag nào được chọn'
-            ];
-        }
+
 
         try {
             $this->conn->beginTransaction();

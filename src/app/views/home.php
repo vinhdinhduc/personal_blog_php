@@ -1,22 +1,12 @@
 <?php
 require_once __DIR__ . '/../helpers/ImageHelper.php';
 
-$postModel = new PostModel();
-$categoryModel = new CategoryModel();
-$tagModel = new TagModel();
 
-// Phân trang
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$perPage = 6;
+$posts = $posts ?? [];
+$categories = $categories ?? [];
+$tags = $tags ?? [];
+$recentPosts = $recentPosts ?? [];
 
-// Lấy dữ liệu
-$posts = $postModel->getPublishedPosts($page, $perPage);
-$totalPosts = $postModel->countPublishedPosts();
-$totalPages = ceil($totalPosts / $perPage);
-
-$recentPosts = $postModel->getRecentPosts(5);
-$categories = $categoryModel->getAll();
-$tags = $tagModel->getAll();
 
 // Lấy bài viết featured (bài mới nhất)
 $featuredPost = !empty($posts) ? $posts[0] : null;
@@ -171,7 +161,7 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                         <h3 class="widget-title">Tags phổ biến</h3>
                         <div class="tag-cloud">
                             <?php foreach ($tags as $tag): ?>
-                                <a href="tag.php?slug=<?php echo $tag['slug']; ?>" class="tag">
+                                <a href="<?php echo Router::url('/tag/' . $tag['slug']); ?>" class="tag">
                                     <?php echo htmlspecialchars($tag['name']); ?>
                                 </a>
                             <?php endforeach; ?>

@@ -1,30 +1,15 @@
 <?php
 require_once __DIR__ . '/../helpers/ImageHelper.php';
 
-$postModel = new PostModel();
-$categoryModel = new CategoryModel();
-$tagModel = new TagModel();
 
-// Lấy từ khóa tìm kiếm
-$keyword = isset($_GET['q']) ? trim($_GET['q']) : '';
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$perPage = 12;
-
-// Tìm kiếm
-$posts = [];
-$totalPosts = 0;
-$totalPages = 0;
-
-if (!empty($keyword)) {
-    $posts = $postModel->search($keyword, $page, $perPage);
-    $totalPosts = $postModel->countSearch($keyword);
-    $totalPages = ceil($totalPosts / $perPage);
-}
-
-// Sidebar data
-$categories = $categoryModel->getAll();
-$tags = $tagModel->getAll();
-$recentPosts = $postModel->getRecentPosts(5);
+$posts = $posts ?? [];
+$keyword = $keyword ?? '';
+$totalPosts = $totalPosts ?? 0;
+$totalPages = $totalPages ?? 0;
+$page = $currentPage ?? 1;
+$categories = $categories ?? [];
+$tags = $tags ?? [];
+$recentPosts = $recentPosts ?? [];
 ?>
 
 <div class="search-page">

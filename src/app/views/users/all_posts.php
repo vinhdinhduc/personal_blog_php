@@ -1,23 +1,15 @@
 <?php
 require_once __DIR__ . '/../../helpers/ImageHelper.php';
 
-$postModel = new PostModel();
-$categoryModel = new CategoryModel();
-$tagModel = new TagModel();
+// ✅ Tuân thủ MVC: Dữ liệu đã được truyền từ Controller
+// Không truy cập trực tiếp Model trong View
 
-// Phân trang
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$perPage = 12;
-
-// Lấy dữ liệu
-$posts = $postModel->getPublishedPosts($page, $perPage);
-$totalPosts = $postModel->countPublishedPosts();
-$totalPages = ceil($totalPosts / $perPage);
-
-// Sidebar data
-$categories = $categoryModel->getAll();
-$tags = $tagModel->getAll();
-$recentPosts = $postModel->getRecentPosts(5);
+// Đảm bảo dữ liệu tồn tại (defensive programming)
+$posts = $posts ?? [];
+$categories = $categories ?? [];
+$tags = $tags ?? [];
+$recentPosts = $recentPosts ?? [];
+$page = $currentPage ?? 1;
 ?>
 
 <div class="all-posts-page">
