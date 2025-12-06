@@ -121,9 +121,6 @@ class PostController extends BaseController
         $this->requireAuth();
         $this->validateMethod('POST');
 
-        // ✅ DEBUG: Log FILES
-        error_log("=== FILES DATA ===");
-        error_log("FILES: " . print_r($_FILES, true));
 
         // Validate CSRF
         if (!$this->validateCSRF()) {
@@ -176,6 +173,30 @@ class PostController extends BaseController
             error_log("No cover image file uploaded");
         }
 
+        // ✅ XỬ LÝ TAGS: Chuyển từ chuỗi thành tag IDs
+        $tagIds = [];
+        $tagsInput = $this->input('tags', '');
+
+        if (!empty($tagsInput) && is_string($tagsInput)) {
+            $tagModel = new TagModel();
+
+            // Tách chuỗi thành array tên tags
+            $tagNames = array_map('trim', explode(',', $tagsInput));
+            $tagNames = array_filter($tagNames); // Loại bỏ empty
+
+            foreach ($tagNames as $tagName) {
+                if (!empty($tagName)) {
+                    // Tìm hoặc tạo mới tag
+                    $tagId = $tagModel->findOrCreate($tagName);
+                    if ($tagId) {
+                        $tagIds[] = $tagId;
+                    }
+                }
+            }
+
+            error_log("Tags processed: " . print_r(['input' => $tagsInput, 'names' => $tagNames, 'ids' => $tagIds], true));
+        }
+
         // Prepare data
         $data = [
             'user_id' => Session::getUserId(),
@@ -186,10 +207,9 @@ class PostController extends BaseController
             'content' => $this->input('content'),
             'cover_image' => $coverImage, // Có thể null
             'status' => $this->input('status', 'draft'),
-            'tags' => $this->input('tags', [])
+            'tags' => $tagIds // Array of tag IDs
         ];
 
-        error_log("Data to create: " . print_r($data, true));
 
         // Validate
         if (empty($data['title'])) {
@@ -199,7 +219,6 @@ class PostController extends BaseController
         }
 
         if (empty($data['content']) || trim($data['content']) === '' || $data['content'] === '<p><br></p>') {
-            error_log("❌ Content validation failed!");
             Toast::error('Nội dung không được để trống');
             $this->redirect('/admin/posts/create');
             return;
@@ -316,6 +335,30 @@ class PostController extends BaseController
             }
         }
 
+        // ✅ XỬ LÝ TAGS: Chuyển từ chuỗi thành tag IDs
+        $tagIds = [];
+        $tagsInput = $this->input('tags', '');
+
+        if (!empty($tagsInput) && is_string($tagsInput)) {
+            $tagModel = new TagModel();
+
+            // Tách chuỗi thành array tên tags
+            $tagNames = array_map('trim', explode(',', $tagsInput));
+            $tagNames = array_filter($tagNames); // Loại bỏ empty
+
+            foreach ($tagNames as $tagName) {
+                if (!empty($tagName)) {
+                    // Tìm hoặc tạo mới tag
+                    $tagId = $tagModel->findOrCreate($tagName);
+                    if ($tagId) {
+                        $tagIds[] = $tagId;
+                    }
+                }
+            }
+
+            error_log("Tags updated: " . print_r(['input' => $tagsInput, 'names' => $tagNames, 'ids' => $tagIds], true));
+        }
+
         // Prepare data
         $data = [
             'category_id' => $this->input('category_id'),
@@ -325,7 +368,7 @@ class PostController extends BaseController
             'content' => $this->input('content'),
             'cover_image' => $coverImage,
             'status' => $this->input('status', 'draft'),
-            'tags' => $this->input('tags', [])
+            'tags' => $tagIds // Array of tag IDs
         ];
 
         // Update

@@ -39,60 +39,6 @@ function initCommentSystem() {
 }
 
 /**
- * Handle comment form submit
- */
-async function handleCommentSubmit(e) {
-  e.preventDefault();
-
-  const form = e.target;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const originalBtnText = submitBtn.innerHTML;
-  const formData = new FormData(form);
-
-  // Disable submit
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
-
-  try {
-    const response = await fetch(form.action, {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      showAlert("success", data.message);
-
-      // Reset form
-      form.reset();
-
-      // Hide reply form if exists
-      const parentId = formData.get("parent_id");
-      if (parentId) {
-        const replyForm = document.getElementById(`reply-form-${parentId}`);
-        if (replyForm) {
-          replyForm.style.display = "none";
-        }
-      }
-
-      // Reload page sau 1s để hiển thị comment mới
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
-    } else {
-      showAlert("error", data.message);
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    showAlert("error", "Có lỗi xảy ra. Vui lòng thử lại.");
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = originalBtnText;
-  }
-}
-
-/**
  * Handle reply button click
  */
 function handleReplyClick(e) {
