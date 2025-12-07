@@ -1,12 +1,13 @@
 <?php
 require_once __DIR__ . '/../helpers/ImageHelper.php';
 
-
+// ✅ Đảm bảo các biến từ Controller tồn tại
 $posts = $posts ?? [];
 $categories = $categories ?? [];
 $tags = $tags ?? [];
 $recentPosts = $recentPosts ?? [];
-
+$totalPages = $totalPages ?? 1;
+$currentPage = $currentPage ?? 1;
 
 // Lấy bài viết featured (bài mới nhất)
 $featuredPost = !empty($posts) ? $posts[0] : null;
@@ -57,7 +58,6 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                         <?php foreach ($posts as $post): ?>
                             <article class="post-card">
                                 <div class="post-image">
-                                    <!-- ✅ Dùng ImageHelper -->
                                     <img src="<?= ImageHelper::postCover($post['cover_image']) ?>"
                                         alt="<?= htmlspecialchars($post['title']) ?>">
                                 </div>
@@ -90,22 +90,22 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
                     <!-- Pagination -->
                     <?php if ($totalPages > 1): ?>
                         <div class="pagination">
-                            <?php if ($page > 1): ?>
-                                <a href="?page=<?php echo $page - 1; ?>" class="page-link">
+                            <?php if ($currentPage > 1): ?>
+                                <a href="?page=<?php echo $currentPage - 1; ?>" class="page-link">
                                     <i class="fas fa-chevron-left"></i>
                                 </a>
                             <?php endif; ?>
 
                             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                                <?php if ($i == $page): ?>
+                                <?php if ($i == $currentPage): ?>
                                     <span class="page-link active"><?php echo $i; ?></span>
                                 <?php else: ?>
                                     <a href="?page=<?php echo $i; ?>" class="page-link"><?php echo $i; ?></a>
                                 <?php endif; ?>
                             <?php endfor; ?>
 
-                            <?php if ($page < $totalPages): ?>
-                                <a href="?page=<?php echo $page + 1; ?>" class="page-link">
+                            <?php if ($currentPage  < $totalPages): ?>
+                                <a href="?page=<?php echo $currentPage  + 1; ?>" class="page-link">
                                     <i class="fas fa-chevron-right"></i>
                                 </a>
                             <?php endif; ?>
@@ -172,7 +172,3 @@ $featuredPost = !empty($posts) ? $posts[0] : null;
         </div>
     </main>
 </div>
-
-
-
-<script src="<?php echo Router::url('/js/home.js'); ?>"></script>

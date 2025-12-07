@@ -305,7 +305,7 @@
 /* ============================================
    POST CARD
    ============================================ */
-.post-card {
+.post-card_user {
     background: #fff;
     border-radius: 12px;
     overflow: hidden;
@@ -315,29 +315,29 @@
     flex-direction: column;
 }
 
-.post-card:hover {
+.post-card_user:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-.post-card__image {
+.post-card_user__image {
     width: 100%;
     height: 200px;
     object-fit: cover;
     transition: transform 0.3s ease;
 }
 
-.post-card:hover .post-card__image {
+.post-card_user:hover .post-card_user__image {
     transform: scale(1.05);
 }
 
-.post-card__image-wrapper {
+.post-card_user__image-wrapper {
     overflow: hidden;
     position: relative;
     background: #f8f9fc;
 }
 
-.post-card__badge {
+.post-card_user__badge {
     position: absolute;
     top: 15px;
     left: 15px;
@@ -350,14 +350,14 @@
     backdrop-filter: blur(10px);
 }
 
-.post-card__body {
+.post-card_user__body {
     padding: 20px;
     flex: 1;
     display: flex;
     flex-direction: column;
 }
 
-.post-card__title {
+.post-card_user__title {
     font-size: 18px;
     font-weight: 700;
     color: #2c3e50;
@@ -369,7 +369,7 @@
     overflow: hidden;
 }
 
-.post-card__excerpt {
+.post-card_user__excerpt {
     color: #5a5c69;
     line-height: 1.6;
     margin-bottom: 15px;
@@ -380,7 +380,7 @@
     overflow: hidden;
 }
 
-.post-card__meta {
+.post-card_user__meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -390,20 +390,20 @@
     color: #858796;
 }
 
-.post-card__author {
+.post-card_user__author {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.post-card__author-avatar {
+.post-card_user__author-avatar {
     width: 30px;
     height: 30px;
     border-radius: 50%;
     object-fit: cover;
 }
 
-.post-card__date {
+.post-card_user__date {
     display: flex;
     align-items: center;
     gap: 5px;
@@ -713,7 +713,7 @@
         font-size: 20px;
     }
 
-    .post-card__image {
+    .post-card_user__image {
         height: 180px;
     }
 }

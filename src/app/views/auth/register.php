@@ -1,5 +1,5 @@
 <?php
- 
+
 ?>
 <div class="auth">
     <div class="auth__container">
@@ -7,7 +7,7 @@
             <!-- Header -->
             <div class="auth__header">
                 <h1 class="auth__title">Tạo tài khoản</h1>
-                <p class="auth__subtitle">Tham gia cộng đồng MyBlog ngay hôm nay</p>
+                <p class="auth__subtitle">Tham gia cộng đồng BlogIT ngay hôm nay</p>
             </div>
 
             <!-- Form -->

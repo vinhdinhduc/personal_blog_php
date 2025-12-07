@@ -57,40 +57,40 @@ $featuredPosts = $featuredPosts ?? [];
                 <?php if (isset($posts) && count($posts) > 0): ?>
                     <div class="posts-section__grid">
                         <?php foreach ($posts as $post): ?>
-                            <article class="post-card">
-                                <a href="<?php echo Router::url('/post/' . $post['slug']); ?>" class="post-card__image-wrapper">
+                            <article class="post-card_user">
+                                <a href="<?php echo Router::url('/post/' . $post['slug']); ?>" class="post-card_user__image-wrapper">
                                     <img src="<?= ImageHelper::postCover($post['cover_image'] ?? '') ?>"
                                         alt="<?= htmlspecialchars($post['title']) ?>"
-                                        class="post-card__image">
+                                        class="post-card_user__image">
                                     <?php if (!empty($post['is_featured'])): ?>
-                                        <span class="post-card__badge">
+                                        <span class="post-card_user__badge">
                                             <i class="fas fa-star"></i> Nổi bật
                                         </span>
                                     <?php endif; ?>
                                 </a>
 
-                                <div class="post-card__body">
-                                    <h3 class="post-card__title">
+                                <div class="post-card_user__body">
+                                    <h3 class="post-card_user__title">
                                         <a href="<?php echo Router::url('/post/' . $post['slug']); ?>" style="text-decoration: none; color: inherit;">
                                             <?= htmlspecialchars($post['title']) ?>
                                         </a>
                                     </h3>
 
                                     <?php if (!empty($post['excerpt'])): ?>
-                                        <p class="post-card__excerpt">
+                                        <p class="post-card_user__excerpt">
                                             <?= htmlspecialchars($post['excerpt']) ?>
                                         </p>
                                     <?php endif; ?>
 
-                                    <div class="post-card__meta">
-                                        <div class="post-card__author">
+                                    <div class="post-card_user__meta">
+                                        <div class="post-card_user__author">
 
                                             <img src="<?= ImageHelper::avatar($post['author_avatar'] ?? '') ?>"
                                                 alt="<?= htmlspecialchars($post['author_name'] ?? 'Author') ?>"
-                                                class="post-card__author-avatar">
+                                                class="post-card_user__author-avatar">
                                             <span><?= htmlspecialchars($post['author_name'] ?? 'Anonymous') ?></span>
                                         </div>
-                                        <div class="post-card__date">
+                                        <div class="post-card_user__date">
                                             <i class="fas fa-calendar"></i>
                                             <?= date('d/m/Y', strtotime($post['created_at'])) ?>
                                         </div>

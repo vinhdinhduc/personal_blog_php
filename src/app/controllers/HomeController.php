@@ -28,13 +28,16 @@
          * Trang chủ - danh sách bài viết
          * @param int $page
          */
-        public function index($page = 1)
+        public function index($page = null)
         {
             $postModel = new PostModel();
             $categoryModel = new CategoryModel();
             $tagModel = new TagModel();
 
             $perPage = 10;
+            if ($page === null) {
+                $page = $this->input('page', 1);
+            }
             $page = max(1, (int)$page);
 
             //Lấy danh sách bài viết published

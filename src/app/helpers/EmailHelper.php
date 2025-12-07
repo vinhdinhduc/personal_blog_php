@@ -34,7 +34,7 @@ class EmailHelper
      */
     public static function sendPasswordResetEmail($to, $name, $resetLink)
     {
-        $subject = 'Đặt lại mật khẩu - MyBlog';
+        $subject = 'Đặt lại mật khẩu - BlogIT';
         $message = self::getPasswordResetTemplate($name, $resetLink);
 
         return self::sendEmail($to, $subject, $message);
@@ -69,7 +69,7 @@ class EmailHelper
                 <div class='content'>
                     <p>Xin chào <strong>$name</strong>,</p>
                     
-                    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản MyBlog của bạn.</p>
+                    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản BlogIT của bạn.</p>
                     
                     <p>Vui lòng nhấn vào nút bên dưới để đặt lại mật khẩu:</p>
                     
@@ -93,11 +93,11 @@ class EmailHelper
                     
                     <p>Nếu bạn gặp vấn đề, vui lòng liên hệ với chúng tôi.</p>
                     
-                    <p>Trân trọng,<br><strong>MyBlog Team</strong></p>
+                    <p>Trân trọng,<br><strong>BlogIT Team</strong></p>
                 </div>
                 <div class='footer'>
                     <p>Email này được gửi tự động, vui lòng không trả lời.</p>
-                    <p>&copy; " . date('Y') . " MyBlog. All rights reserved.</p>
+                    <p>&copy; " . date('Y') . " BlogIT. All rights reserved.</p>
                 </div>
             </div>
         </body>
@@ -352,7 +352,7 @@ class EmailHelper
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>Chào mừng đến với MyBlog!</h1>
+                    <h1>Chào mừng đến với BlogIT!</h1>
                 </div>
                 <div class='content'>
                     <p>Xin chào <strong>$name</strong>,</p>
@@ -372,7 +372,7 @@ class EmailHelper
      */
     public static function testEmail($to = 'test@example.com')
     {
-        $subject = 'Test Email - MyBlog';
+        $subject = 'Test Email - BlogIT';
         $message = '<h1>This is a test email</h1><p>If you receive this, email configuration is working!</p>';
 
         return self::sendEmail($to, $subject, $message);

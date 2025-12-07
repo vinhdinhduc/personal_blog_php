@@ -10,7 +10,7 @@ $page_title = "Đăng nhập";
             <!-- Header -->
             <div class="auth__header">
                 <h1 class="auth__title">Chào mừng trở lại</h1>
-                <p class="auth__subtitle">Đăng nhập để tiếp tục với MyBlog</p>
+                <p class="auth__subtitle">Đăng nhập để tiếp tục với BlogIT</p>
             </div>
 
             <!-- Form -->
