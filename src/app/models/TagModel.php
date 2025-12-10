@@ -1,28 +1,17 @@
 <?php
 
-/**
- * Tag Model
- * Xử lý tags
- */
 
-require_once __DIR__ . '/../../config/database.php';
+
+require_once __DIR__ . '/BaseModel.php';
 require_once __DIR__ . '/../helpers/Security.php';
 
-class TagModel
+class TagModel extends BaseModel
 {
-    private $conn;
-    private $table = 'tags';
+    protected $table = 'tags';
 
-    public function __construct()
-    {
-        $database = new Database();
-        $this->conn = $database->connect();
-    }
 
-    /**
-     * Lấy tất cả tags
-     * @return array
-     */
+    // Lấy tất cả tags với số lượng bài viết
+
     public function getAll()
     {
         $query = "SELECT t.*, COUNT(pt.post_id) as post_count
@@ -32,61 +21,39 @@ class TagModel
                   GROUP BY t.id
                   ORDER BY t.name ASC";
 
-        $stmt = $this->conn->query($query);
-        return $stmt->fetchAll();
+        return $this->query($query);
     }
 
-    /**
-     * Lấy tag theo ID
-     * @param int $id
-     * @return array|null
-     */
-    public function getById($id)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetch();
-    }
 
-    /**
-     * Lấy tag theo slug
-     * @param string $slug
-     * @return array|null
-     */
+    //Lấ//y tag theo slug
+
     public function getBySlug($slug)
     {
-        $query = "SELECT * FROM {$this->table} WHERE slug = :slug";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':slug', $slug);
-        $stmt->execute();
-        return $stmt->fetch();
+        return $this->findOne(['slug' => $slug]);
+    }
+    public function getById($id)
+    {
+        return $this->findOne(['id' => $id]);
     }
 
     /**
      * Tạo tag mới
-     * @param array $data
-     * @return array
      */
     public function create($data)
     {
-        $query = "INSERT INTO {$this->table} (name, slug) VALUES (:name, :slug)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':name', $data['name']);
-        $stmt->bindParam(':slug', $data['slug']);
+        $id = $this->insert([
+            'name' => $data['name'],
+            'slug' => $data['slug']
+        ]);
 
-        if ($stmt->execute()) {
-            return ['success' => true, 'id' => $this->conn->lastInsertId()];
+        if ($id) {
+            return ['success' => true, 'id' => $id];
         }
         return ['success' => false];
     }
 
     /**
      * Cập nhật tag
-     * @param int $id
-     * @param array $data
-     * @return array
      */
     public function update($id, $data)
     {
@@ -96,22 +63,17 @@ class TagModel
                 return ['success' => false, 'message' => 'Tên tag không được trống'];
             }
 
-            // Check if slug exists (excluding current tag)
+            // Check nếu slug đã tồn tại
             if ($this->slugExists($data['slug'], $id)) {
                 $data['slug'] = $data['slug'] . '-' . time();
             }
 
-            $query = "UPDATE {$this->table} 
-                     SET name = :name, 
-                         slug = :slug
-                     WHERE id = :id";
+            $result = $this->updateById($id, [
+                'name' => $data['name'],
+                'slug' => $data['slug']
+            ]);
 
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':name', $data['name']);
-            $stmt->bindParam(':slug', $data['slug']);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-            if ($stmt->execute()) {
+            if ($result) {
                 return [
                     'success' => true,
                     'message' => 'Cập nhật tag thành công'
@@ -125,33 +87,26 @@ class TagModel
         }
     }
 
-    /**
-     * Kiểm tra slug đã tồn tại
-     * @param string $slug
-     * @param int|null $excludeId
-     * @return bool
-     */
+    // Kiểm tra slug đã tồn tại (ngoại trừ ID cho trước)
     public function slugExists($slug, $excludeId = null)
     {
         if ($excludeId) {
-            $query = "SELECT id FROM {$this->table} WHERE slug = :slug AND id != :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':slug', $slug);
-            $stmt->bindParam(':id', $excludeId, PDO::PARAM_INT);
+            $result = $this->queryOne(
+                "SELECT COUNT(*) as count FROM {$this->table} WHERE slug = :slug AND id != :id",
+                ['slug' => $slug, 'id' => $excludeId]
+            );
         } else {
-            $query = "SELECT id FROM {$this->table} WHERE slug = :slug";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':slug', $slug);
+            $result = $this->queryOne(
+                "SELECT COUNT(*) as count FROM {$this->table} WHERE slug = :slug",
+                ['slug' => $slug]
+            );
         }
 
-        $stmt->execute();
-        return $stmt->rowCount() > 0;
+        return $result && $result['count'] > 0;
     }
 
     /**
      * Lấy tags phổ biến nhất
-     * @param int $limit
-     * @return array
      */
     public function getPopular($limit = 10)
     {
@@ -164,17 +119,10 @@ class TagModel
                   ORDER BY post_count DESC
                   LIMIT :limit";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['limit' => $limit]);
     }
-
     /**
      * Tìm kiếm tags
-     * @param string $keyword
-     * @return array
      */
     public function search($keyword)
     {
@@ -184,21 +132,15 @@ class TagModel
                   FROM {$this->table} t
                   LEFT JOIN post_tag pt ON t.id = pt.tag_id
                   LEFT JOIN posts p ON pt.post_id = p.id AND p.status = 'published'
-                  WHERE t.name LIKE :search OR t.slug LIKE :search
+                  WHERE t.name LIKE :search1 OR t.slug LIKE :search2
                   GROUP BY t.id
                   ORDER BY t.name ASC";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':search', $searchTerm);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['search1' => $searchTerm, 'search2' => $searchTerm]);
     }
 
     /**
      * Lấy tags theo post ID
-     * @param int $postId
-     * @return array
      */
     public function getByPostId($postId)
     {
@@ -207,28 +149,11 @@ class TagModel
                   WHERE pt.post_id = :post_id
                   ORDER BY t.name ASC";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
-    }
-
-    /**
-     * Đếm số lượng tags
-     * @return int
-     */
-    public function count()
-    {
-        $query = "SELECT COUNT(*) as total FROM {$this->table}";
-        $result = $this->conn->query($query)->fetch();
-        return (int)$result['total'];
+        return $this->query($query, ['post_id' => $postId]);
     }
 
     /**
      * Lấy tag cloud (với size dựa trên số lượng posts)
-     * @param int $limit
-     * @return array
      */
     public function getTagCloud($limit = 30)
     {
@@ -241,13 +166,9 @@ class TagModel
                   ORDER BY RAND()
                   LIMIT :limit";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $tags = $this->query($query, ['limit' => $limit]);
 
-        $tags = $stmt->fetchAll();
-
-        // Calculate size class based on post count
+        // Tính size dựa trên post_count
         if (!empty($tags)) {
             $counts = array_column($tags, 'post_count');
             $min = min($counts);
@@ -275,80 +196,59 @@ class TagModel
 
     /**
      * Gắn tag vào post
-     * @param int $postId
-     * @param int $tagId
-     * @return bool
+ 
      */
     public function attachToPost($postId, $tagId)
     {
         $query = "INSERT IGNORE INTO post_tag (post_id, tag_id) VALUES (:post_id, :tag_id)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-        $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
-        return $stmt->execute();
+        return $this->execute($query, ['post_id' => $postId, 'tag_id' => $tagId]);
     }
 
     /**
      * Gỡ tag khỏi post
-     * @param int $postId
-     * @param int $tagId
-     * @return bool
      */
     public function detachFromPost($postId, $tagId)
     {
         $query = "DELETE FROM post_tag WHERE post_id = :post_id AND tag_id = :tag_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-        $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
-        return $stmt->execute();
+        return $this->execute($query, ['post_id' => $postId, 'tag_id' => $tagId]);
     }
 
-    /**
-     * Đồng bộ tags cho post (xóa hết rồi add lại)
-     * @param int $postId
-     * @param array $tagIds
-     * @return bool
-     */
+
+    //Đồng bộ tags cho post (xóa hết rồi add lại)
+
     public function syncToPost($postId, $tagIds)
     {
         try {
-            // Begin transaction
-            $this->conn->beginTransaction();
+            // Bắt đầu transaction
+            $this->beginTransaction();
 
-            // Delete existing tags
-            $deleteQuery = "DELETE FROM post_tag WHERE post_id = :post_id";
-            $deleteStmt = $this->conn->prepare($deleteQuery);
-            $deleteStmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-            $deleteStmt->execute();
+            // Xóa tags hiện có
+            $this->execute("DELETE FROM post_tag WHERE post_id = :post_id", ['post_id' => $postId]);
 
-            // Insert new tags
+            // Thêm tags mới
             if (!empty($tagIds)) {
                 $insertQuery = "INSERT INTO post_tag (post_id, tag_id) VALUES (:post_id, :tag_id)";
-                $insertStmt = $this->conn->prepare($insertQuery);
 
                 foreach ($tagIds as $tagId) {
-                    $insertStmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-                    $insertStmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
-                    $insertStmt->execute();
+                    $this->execute($insertQuery, ['post_id' => $postId, 'tag_id' => $tagId]);
                 }
             }
 
             // Commit transaction
-            $this->conn->commit();
+            $this->commit();
             return true;
         } catch (PDOException $e) {
             // Rollback on error
-            $this->conn->rollBack();
+            $this->rollback();
             error_log("Tag Sync Error: " . $e->getMessage());
             return false;
         }
     }
 
-    /**
-     * Tìm hoặc tạo tag mới từ tên
-     * @param string $name
-     * @return int|false Tag ID hoặc false nếu lỗi
-     */
+
+    //Tìm hoặc tạo tag mới từ tên
+
+
     public function findOrCreate($name)
     {
         $name = trim($name);
@@ -374,72 +274,54 @@ class TagModel
         return $result['success'] ? $result['id'] : false;
     }
 
-    /**
-     * Xóa tag
-     * @param int $id
-     * @return bool
-     */
+
+    //  Xóa tag
+
+
     public function delete($id)
     {
         try {
             // Begin transaction
-            $this->conn->beginTransaction();
+            $this->beginTransaction();
 
             // Xóa relationships với posts trước
-            $deleteRelations = "DELETE FROM post_tag WHERE tag_id = :tag_id";
-            $stmtRelations = $this->conn->prepare($deleteRelations);
-            $stmtRelations->bindParam(':tag_id', $id, PDO::PARAM_INT);
-            $stmtRelations->execute();
+            $this->execute("DELETE FROM post_tag WHERE tag_id = :tag_id", ['tag_id' => $id]);
 
             // Xóa tag
-            $deleteTag = "DELETE FROM {$this->table} WHERE id = :id";
-            $stmtTag = $this->conn->prepare($deleteTag);
-            $stmtTag->bindParam(':id', $id, PDO::PARAM_INT);
-            $result = $stmtTag->execute();
+            $result = $this->deleteById($id);
 
             // Commit transaction
-            $this->conn->commit();
+            $this->commit();
 
-            return $result && $stmtTag->rowCount() > 0;
+            return $result;
         } catch (PDOException $e) {
             // Rollback on error
-            $this->conn->rollBack();
+            $this->rollback();
             error_log("Tag Delete Error: " . $e->getMessage());
             return false;
         }
     }
 
-    /**
-     * Xóa nhiều tags cùng lúc
-     * @param array $ids
-     * @return array ['success' => bool, 'deleted_count' => int, 'message' => string]
-     */
+
+    //  Xóa nhiều tags cùng lúc
+
     public function bulkDelete($ids)
     {
-
-
         try {
-            $this->conn->beginTransaction();
+            $this->beginTransaction();
 
             $count = 0;
             foreach ($ids as $id) {
                 // Xóa relationships
-                $deleteRelations = "DELETE FROM post_tag WHERE tag_id = :tag_id";
-                $stmtRelations = $this->conn->prepare($deleteRelations);
-                $stmtRelations->bindParam(':tag_id', $id, PDO::PARAM_INT);
-                $stmtRelations->execute();
+                $this->execute("DELETE FROM post_tag WHERE tag_id = :tag_id", ['tag_id' => $id]);
 
                 // Xóa tag
-                $deleteTag = "DELETE FROM {$this->table} WHERE id = :id";
-                $stmtTag = $this->conn->prepare($deleteTag);
-                $stmtTag->bindParam(':id', $id, PDO::PARAM_INT);
-
-                if ($stmtTag->execute() && $stmtTag->rowCount() > 0) {
+                if ($this->deleteById($id)) {
                     $count++;
                 }
             }
 
-            $this->conn->commit();
+            $this->commit();
 
             return [
                 'success' => true,
@@ -447,7 +329,7 @@ class TagModel
                 'message' => "Đã xóa {$count} tag"
             ];
         } catch (PDOException $e) {
-            $this->conn->rollBack();
+            $this->rollback();
             error_log("Tag Bulk Delete Error: " . $e->getMessage());
 
             return [
@@ -458,32 +340,26 @@ class TagModel
         }
     }
 
-    /**
-     * Kiểm tra tag có đang được sử dụng không
-     * @param int $id
-     * @return bool
-     */
+
+    // Kiểm tra tag có đang được sử dụng không
+
     public function isInUse($id)
     {
-        $query = "SELECT COUNT(*) as count FROM post_tag WHERE tag_id = :tag_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':tag_id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $result = $this->queryOne(
+            "SELECT COUNT(*) as count FROM post_tag WHERE tag_id = :tag_id",
+            ['tag_id' => $id]
+        );
 
-        $result = $stmt->fetch();
-        return $result['count'] > 0;
+        return $result && $result['count'] > 0;
     }
 
-    /**
-     * Xóa tag an toàn (chỉ xóa nếu không còn sử dụng)
-     * @param int $id
-     * @param bool $force Bắt buộc xóa ngay cả khi đang sử dụng
-     * @return array
-     */
+
+    // Xóa tag an toàn (chỉ xóa nếu không còn sử dụng)
+
     public function safeDelete($id, $force = false)
     {
         if (!$force && $this->isInUse($id)) {
-            $tag = $this->getById($id);
+            $tag = $this->findById($id);
             $usageCount = $this->getUsageCount($id);
 
             return [
@@ -509,19 +385,17 @@ class TagModel
         ];
     }
 
-    /**
-     * Lấy số lượng bài viết sử dụng tag
-     * @param int $id
-     * @return int
-     */
+
+    //Lấy số lượng bài viết sử dụng tag
+
+
     public function getUsageCount($id)
     {
-        $query = "SELECT COUNT(*) as count FROM post_tag WHERE tag_id = :tag_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':tag_id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $result = $this->queryOne(
+            "SELECT COUNT(*) as count FROM post_tag WHERE tag_id = :tag_id",
+            ['tag_id' => $id]
+        );
 
-        $result = $stmt->fetch();
-        return (int)$result['count'];
+        return $result ? (int)$result['count'] : 0;
     }
 }

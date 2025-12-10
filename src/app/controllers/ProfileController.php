@@ -93,12 +93,7 @@ class ProfileController extends BaseController
         $this->redirect('/profile');
     }
 
-    /**
-     * Cập nhật avatar - FIXED VERSION
-     */
-    /**
-     * Cập nhật avatar - SIMPLE VERSION (không dùng JSON)
-     */
+    // Cập nhật ảnh đại diện
     public function updateAvatar()
     {
         $this->validateMethod('POST');
@@ -111,7 +106,7 @@ class ProfileController extends BaseController
 
         $userId = Session::getUserId();
 
-        // ✅ CHECK FILE
+
         if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] === UPLOAD_ERR_NO_FILE) {
             Toast::error('Vui lòng chọn file ảnh');
             $this->redirect('/profile');
@@ -124,7 +119,7 @@ class ProfileController extends BaseController
             return;
         }
 
-        // ✅ Get user info để xóa ảnh cũ
+        // Get user info để xóa ảnh cũ
         $user = $this->userModel->getUserById($userId);
         if (!$user) {
             Toast::error('User không tồn tại');
@@ -132,7 +127,7 @@ class ProfileController extends BaseController
             return;
         }
 
-        // ✅ Upload file
+        //  Upload file
         $uploadResult = $this->uploadFile('avatar', 'uploads/avatars/');
 
         if (!$uploadResult['success']) {
@@ -141,7 +136,7 @@ class ProfileController extends BaseController
             return;
         }
 
-        // ✅ XÓA ảnh cũ
+        //  XÓA ảnh cũ
         if (!empty($user['avatar']) && strpos($user['avatar'], 'default-avatar') === false) {
             $oldPath = __DIR__ . '/../../public/' . ltrim($user['avatar'], '/');
             if (file_exists($oldPath)) {
@@ -149,7 +144,7 @@ class ProfileController extends BaseController
             }
         }
 
-        // ✅ Update database
+        // Update database
         $result = $this->userModel->updateUser($userId, [
             'avatar' => $uploadResult['path']
         ]);
@@ -173,86 +168,6 @@ class ProfileController extends BaseController
         $this->redirect('/profile');
     }
 
-    /**
-     * Helper: Resize image
-     */
-    private function resizeImage($filePath, $maxWidth, $maxHeight)
-    {
-        if (!file_exists($filePath)) {
-            return false;
-        }
-
-        $imageInfo = getimagesize($filePath);
-        if (!$imageInfo) {
-            return false;
-        }
-
-        list($width, $height, $type) = $imageInfo;
-
-        // Không cần resize nếu ảnh đã nhỏ hơn
-        if ($width <= $maxWidth && $height <= $maxHeight) {
-            return true;
-        }
-
-        // Calculate new dimensions
-        $ratio = min($maxWidth / $width, $maxHeight / $height);
-        $newWidth = round($width * $ratio);
-        $newHeight = round($height * $ratio);
-
-        // Create image resource
-        switch ($type) {
-            case IMAGETYPE_JPEG:
-                $source = imagecreatefromjpeg($filePath);
-                break;
-            case IMAGETYPE_PNG:
-                $source = imagecreatefrompng($filePath);
-                break;
-            case IMAGETYPE_GIF:
-                $source = imagecreatefromgif($filePath);
-                break;
-            case IMAGETYPE_WEBP:
-                $source = imagecreatefromwebp($filePath);
-                break;
-            default:
-                return false;
-        }
-
-        // Create new image
-        $destination = imagecreatetruecolor($newWidth, $newHeight);
-
-        // Preserve transparency for PNG/GIF
-        if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF) {
-            imagealphablending($destination, false);
-            imagesavealpha($destination, true);
-            $transparent = imagecolorallocatealpha($destination, 255, 255, 255, 127);
-            imagefilledrectangle($destination, 0, 0, $newWidth, $newHeight, $transparent);
-        }
-
-        // Resize
-        imagecopyresampled($destination, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-
-        // Save
-        switch ($type) {
-            case IMAGETYPE_JPEG:
-                imagejpeg($destination, $filePath, 85);
-                break;
-            case IMAGETYPE_PNG:
-                imagepng($destination, $filePath, 8);
-                break;
-            case IMAGETYPE_GIF:
-                imagegif($destination, $filePath);
-                break;
-            case IMAGETYPE_WEBP:
-                imagewebp($destination, $filePath, 85);
-                break;
-        }
-
-        // Clean up
-        imagedestroy($source);
-        imagedestroy($destination);
-
-        return true;
-    }
 
     /**
      * Đổi mật khẩu

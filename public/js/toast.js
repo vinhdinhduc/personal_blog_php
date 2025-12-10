@@ -1,9 +1,3 @@
-/**
- * Toast Notification System
- * File: public/assets/js/toast.js
- * Version: 1.0.0
- */
-
 class Toast {
   constructor(options = {}) {
     this.options = {
@@ -17,9 +11,6 @@ class Toast {
     this.init();
   }
 
-  /**
-   * Initialize toast container
-   */
   init() {
     // Check if container already exists
     this.container = document.querySelector(".toast-container");

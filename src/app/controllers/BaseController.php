@@ -82,7 +82,7 @@ class BaseController
     protected function requireAuth($redirectTo = "/login")
     {
         if (!Session::isLoggedIn()) {
-            Session::flash('error', 'Vui lòng đăng nhập để tiếp tục.');
+            Toast::error('Vui lòng đăng nhập để tiếp tục.');
             $this->redirect($redirectTo);
         }
     }
@@ -92,7 +92,7 @@ class BaseController
     {
 
         if (!Session::isLoggedIn()) {
-            Session::flash('error', 'Vui lòng đăng nhập để tiếp tục.');
+            Toast::error('Vui lòng đăng nhập để tiếp tục.');
             // Lưu URL hiện tại để redirect sau khi login
             Session::set('intended_url', $_SERVER['REQUEST_URI']);
             $this->redirect('/login');
@@ -100,7 +100,7 @@ class BaseController
         }
 
         if (!Session::isAdmin()) {
-            Session::flash('error', 'Bạn không có quyền truy cập trang này.');
+            Toast::error('Bạn không có quyền truy cập trang này.');
 
             $this->redirect($redirectTo);
             exit;
@@ -113,7 +113,7 @@ class BaseController
     protected function requireAdminOrOwner($resourceUserId, $redirectTo = "/")
     {
         if (!Session::isLoggedIn()) {
-            Session::flash('error', 'Vui lòng đăng nhập để tiếp tục.');
+            Toast::error('Vui lòng đăng nhập để tiếp tục.');
             Session::set('intended_url', $_SERVER['REQUEST_URI']);
             $this->redirect('/login');
             exit;
@@ -124,7 +124,7 @@ class BaseController
         $isOwner = $currentUserId == $resourceUserId;
 
         if (!$isAdmin && !$isOwner) {
-            Session::flash('error', 'Bạn không có quyền truy cập trang này.');
+            Toast::error('Bạn không có quyền truy cập trang này.');
             $this->redirect($redirectTo);
             exit;
         }
@@ -137,7 +137,7 @@ class BaseController
     {
         $token = $_POST["csrf_token"] ?? '';
         if (!Security::verifyCSRFToken($token)) {
-            Session::flash('error', 'Yêu cầu không hợp lệ. Vui lòng thử lại.');
+            Toast::error('Yêu cầu không hợp lệ. Vui lòng thử lại.');
             return false;
         }
         return true;

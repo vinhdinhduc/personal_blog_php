@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   console.log("Initializing Quill Editor...");
 
-  // ✅ Khởi tạo Quill với config đầy đủ
+  // Khởi tạo Quill với config đầy đủ
   window.quillEditor = new Quill("#editor", {
     theme: "snow",
     modules: {
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   console.log("Quill Editor initialized successfully!");
 
-  // ✅ LOAD EXISTING CONTENT (for edit mode)
+  // Load existing content (for edit mode)
   const hiddenContent = document.getElementById("editorContent");
   if (hiddenContent && hiddenContent.value.trim()) {
     console.log("Loading existing content...");
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
     window.quillEditor.root.innerHTML.substring(0, 100)
   );
 
-  // ✅ SYNC CONTENT NGAY KHI QUILL THAY ĐỔI
+  //  SYNC CONTENT NGAY KHI QUILL THAY ĐỔI
   window.quillEditor.on("text-change", function () {
     const content = window.quillEditor.root.innerHTML;
     const hiddenField = document.getElementById("editorContent");
@@ -615,10 +615,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.addEventListener("resize", handleResponsiveToolbar);
   handleResponsiveToolbar();
-
-  // ==============================================
-  // INITIALIZATION COMPLETE
-  // ==============================================
-
-  console.log("✅ Post Editor initialized successfully");
 })();

@@ -16,7 +16,7 @@
 </div>
 
 <!-- Form Container -->
-<form action="<?= Router::url('/admin/users/store') ?>" method="POST" enctype="multipart/form-data" class="user-form">
+<form action="<?= Router::url('/admin/users/create') ?>" method="POST" enctype="multipart/form-data" class="user-form">
     <input type="hidden" name="csrf_token" value="<?= $csrfToken ?? '' ?>">
 
     <div class="user-form__layout">
@@ -138,27 +138,7 @@
                 </div>
             </div>
 
-            <!-- Additional Info -->
-            <div class="form-card">
-                <div class="form-card__header">
-                    <i class="fas fa-info-circle form-card__icon"></i>
-                    <h3 class="form-card__title">Thông tin bổ sung</h3>
-                </div>
-                <div class="form-card__body">
-                    <div class="form-group">
-                        <label class="form-group__label">Giới thiệu</label>
-                        <textarea name="bio" class="form-group__input" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-group__label">Số điện thoại</label>
-                        <input type="tel" name="phone" class="form-group__input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-group__label">Website</label>
-                        <input type="url" name="website" class="form-group__input">
-                    </div>
-                </div>
-            </div>
+
         </div>
     </div>
 </form>
@@ -170,13 +150,13 @@
 
         if (file) {
             if (file.size > 2 * 1024 * 1024) {
-                alert('Kích thước file không được vượt quá 2MB!');
+                window.toast.error('Kích thước file quá lớn', 'File không được vượt quá 2MB');
                 input.value = '';
                 return;
             }
 
             if (!file.type.match('image.*')) {
-                alert('Vui lòng chọn file ảnh!');
+                window.toast.error('File không hợp lệ', 'Vui lòng chọn file ảnh (JPG, PNG, GIF)');
                 input.value = '';
                 return;
             }
@@ -184,6 +164,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 preview.innerHTML = `<img src="${e.target.result}" class="avatar-upload__image" alt="Preview">`;
+                window.toast.success('Đã chọn ảnh', 'Ảnh đại diện sẽ được tải lên khi lưu');
             };
             reader.readAsDataURL(file);
         }
@@ -196,15 +177,20 @@
 
         if (password !== confirm) {
             e.preventDefault();
-            alert('Mật khẩu xác nhận không khớp!');
+            window.toast.error('Mật khẩu không khớp', 'Vui lòng kiểm tra lại mật khẩu xác nhận');
+            document.getElementById('password_confirm').focus();
             return;
         }
 
         if (password.length < 6) {
             e.preventDefault();
-            alert('Mật khẩu phải có ít nhất 6 ký tự!');
+            window.toast.error('Mật khẩu quá ngắn', 'Mật khẩu phải có ít nhất 6 ký tự');
+            document.getElementById('password').focus();
             return;
         }
+
+        // Show loading toast
+        window.toast.info('Đang xử lý...', 'Vui lòng đợi trong giây lát', 0);
     });
 </script>
 

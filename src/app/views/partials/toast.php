@@ -1,9 +1,6 @@
 <?php
 
-/**
- * Toast Partial
- * Include this in your layouts to enable toast notifications
- */
+// Load toast messages from session
 
 // Get all flash messages
 $toastMessages = [
@@ -13,11 +10,11 @@ $toastMessages = [
     'info' => Session::getFlash('info')
 ];
 
-// Filter out empty messages
+// Lọc bỏ các mục rỗng
 $toastMessages = array_filter($toastMessages);
 
 if (empty($toastMessages)) {
-    return; // Nothing to show
+    return; // Không có gì để hiển thị
 }
 ?>
 
@@ -25,7 +22,7 @@ if (empty($toastMessages)) {
     document.addEventListener('DOMContentLoaded', function() {
         <?php foreach ($toastMessages as $type => $data): ?>
             <?php
-            // Check if data is array (with title and message) or string
+            // Kiểm tra nếu $data là mảng để lấy title và message
             if (is_array($data)) {
                 $title = $data['title'] ?? ucfirst($type);
                 $message = $data['message'] ?? '';
@@ -34,7 +31,7 @@ if (empty($toastMessages)) {
                 $message = $data;
             }
             ?>
-
+            // Gọi hàm hiển thị toast tương ứng
             toast.<?php echo $type; ?>(
                 <?php echo json_encode($title); ?>,
                 <?php echo json_encode($message); ?>

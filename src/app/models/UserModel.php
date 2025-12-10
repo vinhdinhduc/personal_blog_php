@@ -36,7 +36,7 @@ class UserModel extends BaseModel
             'email' => $data['email'],
             'password_hash' => Security::hashPassword($data['password']),
             'role' => $data['role'] ?? 'user',
-
+            'avatar' => $data['avatar'] ?? null
         ];
 
         $userId = $this->insert($userData);
@@ -118,9 +118,8 @@ class UserModel extends BaseModel
         return $this->queryOne($query, ['id' => $id]);
     }
 
-    /**
-     * Get all users with pagination and stats
-     * CHUYỂN TỪ CONTROLLER
+    /*
+    Lấy tất cả
      */
     public function getAllWithStats($page = 1, $perPage = 20)
     {
@@ -130,6 +129,7 @@ class UserModel extends BaseModel
                          CONCAT(u.first_name, ' ', u.last_name) as full_name,
                          COUNT(DISTINCT p.id) as post_count,
                          COUNT(DISTINCT c.id) as comment_count
+
                   FROM {$this->table} u
                   LEFT JOIN posts p ON u.id = p.user_id
                   LEFT JOIN comments c ON u.id = c.user_id
@@ -324,13 +324,19 @@ class UserModel extends BaseModel
         return $stmt->fetchAll();
     }
 
+
+
+
     /**
-     * Get active users count
+     * Get admin count
+     * @return int
      */
-    public function getActiveUsersCount()
+    public function getAdminCount()
     {
-        return $this->count(['status' => 'active']);
+        return $this->count(['role' => 'admin']);
     }
+
+
 
     /**
      * Get recent registered users
@@ -439,6 +445,7 @@ class UserModel extends BaseModel
         $lastName = $data['last_name'] ?? $data['lName'] ?? '';
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';
+        $passwordConfirm = $data['password_confirm'] ?? '';
 
         if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
             return ["success" => false, "message" => "Vui lòng điền đầy đủ thông tin."];
@@ -450,6 +457,11 @@ class UserModel extends BaseModel
 
         if (strlen($password) < 6) {
             return ["success" => false, "message" => "Mật khẩu phải có ít nhất 6 ký tự."];
+        }
+
+        // Validate password confirmation if provided
+        if (!empty($passwordConfirm) && $password !== $passwordConfirm) {
+            return ["success" => false, "message" => "Mật khẩu xác nhận không khớp."];
         }
 
         return ["success" => true];

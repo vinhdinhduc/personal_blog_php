@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../helpers/ImageHelper.php';
 
-// ✅ Đảm bảo các biến từ Controller tồn tại
+//  Đảm bảo các biến từ Controller tồn tại
 $posts = $posts ?? [];
 $categories = $categories ?? [];
 $tags = $tags ?? [];

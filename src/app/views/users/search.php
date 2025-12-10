@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../helpers/ImageHelper.php';
+require_once __DIR__ . '/../../helpers/ImageHelper.php';
 
 
 $posts = $posts ?? [];
@@ -35,7 +35,7 @@ $recentPosts = $recentPosts ?? [];
                     </p>
                 <?php endif; ?>
 
-                <!-- Search Form in Header -->
+                <!-- Form tìm kiếm -->
                 <form action="<?php echo Router::url('/search'); ?>" method="GET" class="search-header__form">
                     <div class="search-header__input-wrapper">
                         <i class="fas fa-search search-header__input-icon"></i>
@@ -43,7 +43,7 @@ $recentPosts = $recentPosts ?? [];
                             name="q"
                             class="search-header__input"
                             placeholder="Nhập từ khóa tìm kiếm..."
-                            value="<?php echo htmlspecialchars($keyword); ?>"
+                            value="<?php echo $keyword; ?>"
                             required
                             autofocus>
                         <button type="submit" class="search-header__submit">
@@ -140,7 +140,6 @@ $recentPosts = $recentPosts ?? [];
                                         <h3 class="search-result__title">
                                             <a href="<?php echo Router::url('/post/' . $post['slug']); ?>">
                                                 <?php
-                                                // Highlight keyword in title
                                                 $highlightedTitle = preg_replace(
                                                     '/(' . preg_quote($keyword, '/') . ')/iu',
                                                     '<mark>$1</mark>',
@@ -154,7 +153,6 @@ $recentPosts = $recentPosts ?? [];
                                         <p class="search-result__excerpt">
                                             <?php
                                             $excerpt = htmlspecialchars(substr(strip_tags($post['excerpt'] ?? $post['content']), 0, 150));
-                                            // Highlight keyword in excerpt
                                             $highlightedExcerpt = preg_replace(
                                                 '/(' . preg_quote($keyword, '/') . ')/iu',
                                                 '<mark>$1</mark>',
@@ -185,7 +183,7 @@ $recentPosts = $recentPosts ?? [];
                             <?php endforeach; ?>
                         </div>
 
-                        <!-- Pagination -->
+                        <!-- Phân trang -->
                         <?php if ($totalPages > 1): ?>
                             <nav class="pagination" aria-label="Phân trang">
                                 <ul class="pagination__list">
@@ -254,7 +252,7 @@ $recentPosts = $recentPosts ?? [];
 
                 <!-- Sidebar -->
                 <aside class="search-sidebar">
-                    <!-- Categories Widget -->
+                    <!-- Danh mục tìm kiếm -->
                     <div class="widget">
                         <h3 class="widget__title">Tìm theo danh mục</h3>
                         <ul class="category-widget">

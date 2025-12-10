@@ -1,7 +1,3 @@
-/**
- * Profile Page JavaScript
- */
-
 document.addEventListener("DOMContentLoaded", function () {
   const avatarInput = document.getElementById("avatarInput");
   const avatarPreview = document.getElementById("avatarPreview");
@@ -40,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
       };
       reader.readAsDataURL(file);
 
-      // ✅ AUTO SUBMIT FORM
+      //  AUTO SUBMIT FORM
       avatarForm.submit();
     });
   }

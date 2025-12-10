@@ -1,10 +1,6 @@
  <?php
 
-    /**
-     * Home Controller
-     * Xử lý trang chủ và listing
-     */
-
+    //Xử lý trang chủ và các trang liên quan đến bài viết
     require_once __DIR__ . '/BaseController.php';
     require_once __DIR__ . '/../models/PostModel.php';
     require_once __DIR__ . '/../models/CategoryModel.php';

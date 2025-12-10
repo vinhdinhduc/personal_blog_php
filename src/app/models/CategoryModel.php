@@ -1,25 +1,15 @@
 <?php
 
-/**
- * Category Model
- * Xử lý danh mục bài viết
- */
+//Quản lý danh mục bài viét
 
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/BaseModel.php';
 
-class CategoryModel
+class CategoryModel extends BaseModel
 {
-    public $conn;
-    private $table = 'categories';
-
-    public function __construct()
-    {
-        $database = new Database();
-        $this->conn = $database->connect();
-    }
+    protected $table = 'categories';
 
     /**
-     * Lấy tất cả categories
+     * Lấy tất cả categories với số lượng bài viết
      * @return array
      */
     public function getAll()
@@ -30,22 +20,7 @@ class CategoryModel
                   GROUP BY c.id
                   ORDER BY c.name ASC";
 
-        $stmt = $this->conn->query($query);
-        return $stmt->fetchAll();
-    }
-
-    /**
-     * Lấy category theo ID
-     * @param int $id
-     * @return array|null
-     */
-    public function getById($id)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetch();
+        return $this->query($query);
     }
 
     /**
@@ -55,11 +30,11 @@ class CategoryModel
      */
     public function getBySlug($slug)
     {
-        $query = "SELECT * FROM {$this->table} WHERE slug = :slug";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':slug', $slug);
-        $stmt->execute();
-        return $stmt->fetch();
+        return $this->findOne(['slug' => $slug]);
+    }
+    public function getById($id)
+    {
+        return $this->findOne(['id' => $id]);
     }
 
     /**
@@ -69,33 +44,33 @@ class CategoryModel
      */
     public function create($data)
     {
-        $query = "INSERT INTO {$this->table} (name, slug, description) 
-                  VALUES (:name, :slug, :description)";
+        $id = $this->insert([
+            'name' => $data['name'],
+            'slug' => $data['slug'],
+            'description' => $data['description'] ?? null
+        ]);
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':name', $data['name']);
-        $stmt->bindParam(':slug', $data['slug']);
-        $stmt->bindParam(':description', $data['description']);
-
-        if ($stmt->execute()) {
-            return ['success' => true, 'id' => $this->conn->lastInsertId()];
+        if ($id) {
+            return ['success' => true, 'id' => $id];
         }
         return ['success' => false];
     }
 
+    /**
+     * Cập nhật category
+     * @param int $id
+     * @param array $data
+     * @return array
+     */
     public function update($id, $data)
     {
-        $query = "UPDATE {$this->table} 
-                  SET name = :name, slug = :slug, description = :description 
-                  WHERE id = :id";
+        $result = $this->updateById($id, [
+            'name' => $data['name'],
+            'slug' => $data['slug'],
+            'description' => $data['description'] ?? null
+        ]);
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':name', $data['name']);
-        $stmt->bindParam(':slug', $data['slug']);
-        $stmt->bindParam(':description', $data['description']);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-        if ($stmt->execute()) {
+        if ($result) {
             return ['success' => true];
         }
         return ['success' => false];
@@ -108,37 +83,37 @@ class CategoryModel
      */
     public function delete($id)
     {
-        $query = "DELETE FROM {$this->table} WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        return $stmt->execute();
+        return $this->deleteById($id);
     }
 
-
-    //Lấy danh mục phổ biến    private function getPopularCategories($limit = 6)
+    /**
+     * Lấy danh mục phổ biến
+     * @param int $limit
+     * @return array
+     */
     public function getPopularCategories($limit = 6)
     {
         $query = "SELECT c.*, COUNT(p.id) as post_count
-                  FROM categories c
+                  FROM {$this->table} c
                   LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
                   GROUP BY c.id
                   HAVING post_count > 0
                   ORDER BY post_count DESC, c.name ASC
                   LIMIT :limit";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['limit' => $limit]);
     }
+
     /**
      * Lấy danh mục liên quan
+     * @param int $currentCategoryId
+     * @param int $limit
+     * @return array
      */
     public function getRelatedCategories($currentCategoryId, $limit = 4)
     {
         $query = "SELECT c.*, COUNT(p.id) as post_count
-                  FROM categories c
+                  FROM {$this->table} c
                   LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
                   WHERE c.id != :current_id
                   GROUP BY c.id
@@ -146,11 +121,39 @@ class CategoryModel
                   ORDER BY RAND()
                   LIMIT :limit";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':current_id', $currentCategoryId, PDO::PARAM_INT);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        return $this->query($query, [
+            'current_id' => $currentCategoryId,
+            'limit' => $limit
+        ]);
+    }
 
-        return $stmt->fetchAll();
+    /**
+     * Kiểm tra slug đã tồn tại chưa
+     * @param string $slug
+     * @param int|null $excludeId ID cần loại trừ (khi update)
+     * @return bool
+     */
+    public function slugExists($slug, $excludeId = null)
+    {
+        if ($excludeId) {
+            $query = "SELECT COUNT(*) as count FROM {$this->table} 
+                      WHERE slug = :slug AND id != :id";
+            $result = $this->queryOne($query, ['slug' => $slug, 'id' => $excludeId]);
+        } else {
+            $result = $this->queryOne("SELECT COUNT(*) as count FROM {$this->table} WHERE slug = :slug", ['slug' => $slug]);
+        }
+
+        return $result && $result['count'] > 0;
+    }
+
+    /**
+     * Lấy categories có phân trang
+     * @param int $page
+     * @param int $perPage
+     * @return array
+     */
+    public function getPaginated($page = 1, $perPage = 10)
+    {
+        return $this->paginate($page, $perPage, [], '*', 'name ASC');
     }
 }

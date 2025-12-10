@@ -22,13 +22,13 @@ class PostController extends BaseController
         $postModel = new PostModel();
 
         $page = $this->input('page', 1);
-        $perPage = 20;
+        $perPage = 5;
 
         // Lấy filter parameters
         $status = $this->input('status', '');
         $search = $this->input('search', '');
 
-        // Get posts with details through Model
+        // Lấy danh sách bài viết với chi tiết
         $posts = $postModel->getAllWithDetails($page, $perPage, $status, $search);
         $totalPosts = $postModel->countAllWithDetails($status, $search);
 
@@ -138,7 +138,7 @@ class PostController extends BaseController
 
         $postModel = new PostModel();
 
-        // ✅ XỬ LÝ UPLOAD ẢNH ĐÚNG
+        //  XỬ LÝ UPLOAD ẢNH ĐÚNG
         $coverImage = null;
 
         // Kiểm tra có file upload không
@@ -151,7 +151,7 @@ class PostController extends BaseController
 
                 if ($uploadResult['success']) {
                     $coverImage = $uploadResult['path'];
-                    error_log("✅ Image uploaded: " . $coverImage);
+                    error_log(" Image uploaded: " . $coverImage);
                 } else {
                     error_log("❌ Image upload failed: " . $uploadResult['message']);
                     // Không return, tiếp tục tạo post không có ảnh
@@ -173,7 +173,7 @@ class PostController extends BaseController
             error_log("No cover image file uploaded");
         }
 
-        // ✅ XỬ LÝ TAGS: Chuyển từ chuỗi thành tag IDs
+        //  XỬ LÝ TAGS: Chuyển từ chuỗi thành tag IDs
         $tagIds = [];
         $tagsInput = $this->input('tags', '');
 
@@ -250,14 +250,14 @@ class PostController extends BaseController
         $post = $postModel->getById($id);
 
         if (!$post) {
-            Session::flash('error', 'Bài viết không tồn tại');
+            Toast::error('Bài viết không tồn tại');
             $this->redirect('/');
             return;
         }
 
         // Kiểm tra quyền sửa
         if (!$this->canEdit($post)) {
-            Session::flash('error', 'Bạn không có quyền sửa bài viết này');
+            Toast::error('Bạn không có quyền sửa bài viết này');
             $this->redirect('/');
             return;
         }
@@ -265,8 +265,7 @@ class PostController extends BaseController
         $categoryModel = new CategoryModel();
         $tagModel = new TagModel();
 
-        // Get selected tag IDs
-        // DEBUG: Xem cấu trúc của tags
+
         error_log("Post tags structure: " . print_r($post['tags'], true));
 
         $selectedTags = [];
@@ -289,7 +288,6 @@ class PostController extends BaseController
 
     /**
      * Xử lý cập nhật bài viết
-     * @param int $id
      */
     public function update($id)
     {
@@ -316,7 +314,7 @@ class PostController extends BaseController
             return;
         }
 
-        // ✅ XỬ LÝ UPLOAD ẢNH
+        // 
         $coverImage = $post['cover_image']; // Giữ ảnh cũ
 
         if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
@@ -335,7 +333,7 @@ class PostController extends BaseController
             }
         }
 
-        // ✅ XỬ LÝ TAGS: Chuyển từ chuỗi thành tag IDs
+        //  XỬ LÝ TAGS: Chuyển từ chuỗi thành tag IDs
         $tagIds = [];
         $tagsInput = $this->input('tags', '');
 
@@ -355,8 +353,6 @@ class PostController extends BaseController
                     }
                 }
             }
-
-            error_log("Tags updated: " . print_r(['input' => $tagsInput, 'names' => $tagNames, 'ids' => $tagIds], true));
         }
 
         // Prepare data
@@ -415,7 +411,7 @@ class PostController extends BaseController
             return;
         }
 
-        // ✅ XÓA ẢNH NẾU CÓ
+        //  XÓA ẢNH NẾU CÓ
         if (!empty($post['cover_image'])) {
             $imagePath = __DIR__ . '/../../../public/' . $post['cover_image'];
             if (file_exists($imagePath)) {
@@ -424,7 +420,7 @@ class PostController extends BaseController
             }
         }
 
-        // ✅ XÓA POST
+        //  XÓA POST
         if ($postModel->delete($id)) {
             Toast::success('Xóa bài viết thành công');
             $this->redirect('/admin/posts');
@@ -458,8 +454,6 @@ class PostController extends BaseController
         $result = $this->uploadFile('image', 'uploads/posts/');
 
         if ($result['success']) {
-            // Save to database (optional)
-            // ... code to save upload record
 
             $this->json([
                 'success' => true,

@@ -1,36 +1,18 @@
 <?php
 
-/**
- * Post Model
- * Xử lý các thao tác CRUD với bài viết
- */
 
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/BaseModel.php';
 require_once __DIR__ . '/../helpers/Security.php';
 
-class PostModel
+class PostModel extends BaseModel
 {
-    public $conn;
-    private $table = 'posts';
+    protected $table = 'posts';
 
-    public function __construct()
-    {
-        $database = new Database();
-        $this->conn = $database->connect();
-    }
-
-    /**
-     * Tạo bài viết mới
-     * @param array $data
-     * @return array
-     */
+    //Tạo bài viết mới
     public function create($data)
     {
         try {
-            // Validate
-            if (empty($data['title']) || empty($data['content'])) {
-                return ['success' => false, 'message' => 'Tiêu đề và nội dung không được trống'];
-            }
+
 
             // Tạo slug nếu chưa có
             $slug = !empty($data['slug']) ? $data['slug'] : Security::createSlug($data['title']);
@@ -40,25 +22,20 @@ class PostModel
                 $slug = $slug . '-' . time();
             }
 
-            $query = "INSERT INTO {$this->table} 
-                     (user_id, category_id, title, slug, excerpt, content, cover_image, status) 
-                     VALUES (:user_id, :category_id, :title, :slug, :excerpt, :content, :cover_image, :status)";
-
-            $stmt = $this->conn->prepare($query);
-
-            $stmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
-            $stmt->bindParam(':category_id', $data['category_id'], PDO::PARAM_INT);
-            $stmt->bindParam(':title', $data['title']);
-            $stmt->bindParam(':slug', $slug);
-            $stmt->bindParam(':excerpt', $data['excerpt']);
-            $stmt->bindParam(':content', $data['content']);
-            $stmt->bindParam(':cover_image', $data['cover_image']);
-
             $status = $data['status'] ?? 'draft';
-            $stmt->bindParam(':status', $status);
 
-            if ($stmt->execute()) {
-                $postId = $this->conn->lastInsertId();
+            $postId = $this->insert([
+                'user_id' => $data['user_id'],
+                'category_id' => $data['category_id'],
+                'title' => $data['title'],
+                'slug' => $slug,
+                'excerpt' => $data['excerpt'],
+                'content' => $data['content'],
+                'cover_image' => $data['cover_image'],
+                'status' => $status
+            ]);
+
+            if ($postId) {
 
                 // Lưu tags
                 if (!empty($data['tags'])) {
@@ -80,28 +57,20 @@ class PostModel
         }
     }
 
-    /**
-     * Cập nhật bài viết
-     * @param int $id
-     * @param array $data
-     * @return array
-     */
+    //Cập nhật post
     public function update($id, $data)
     {
         try {
-            // Validate
-            if (empty($data['title']) || empty($data['content'])) {
-                return ['success' => false, 'message' => 'Tiêu đề và nội dung không được trống'];
-            }
+
 
             // Tạo slug mới nếu có
             if (!empty($data['slug'])) {
                 $slug = $data['slug'];
             } else {
-                // $slug = Security::createSlug($data['title']);
+                $slug = Security::createSlug($data['title']);
             }
 
-            // Kiểm tra slug trùng (trừ bài hiện tại)
+            // Kiểm tra slug trùng 
             if ($this->slugExists($slug, $id)) {
                 $slug = $slug . '-' . time();
             }
@@ -117,18 +86,16 @@ class PostModel
                          updated_at = CURRENT_TIMESTAMP
                      WHERE id = :id";
 
-            $stmt = $this->conn->prepare($query);
-
-            $stmt->bindParam(':category_id', $data['category_id'], PDO::PARAM_INT);
-            $stmt->bindParam(':title', $data['title']);
-            $stmt->bindParam(':slug', $slug);
-            $stmt->bindParam(':excerpt', $data['excerpt']);
-            $stmt->bindParam(':content', $data['content']);
-            $stmt->bindParam(':cover_image', $data['cover_image']);
-            $stmt->bindParam(':status', $data['status']);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-            if ($stmt->execute()) {
+            if ($this->execute($query, [
+                'category_id' => $data['category_id'],
+                'title' => $data['title'],
+                'slug' => $slug,
+                'excerpt' => $data['excerpt'],
+                'content' => $data['content'],
+                'cover_image' => $data['cover_image'],
+                'status' => $data['status'],
+                'id' => $id
+            ])) {
                 // Cập nhật tags
                 if (isset($data['tags'])) {
                     $this->deletePostTags($id);
@@ -151,29 +118,17 @@ class PostModel
         }
     }
 
-    /**
-     * Xóa bài viết
-     * @param int $id
-     * @return bool
-     */
+    //Xoá bài viết
     public function delete($id)
     {
         try {
-            $query = "DELETE FROM {$this->table} WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            return $stmt->execute();
+            return $this->deleteById($id);
         } catch (PDOException $e) {
             error_log("Post Delete Error: " . $e->getMessage());
             return false;
         }
     }
-
-    /**
-     * Lấy bài viết theo ID
-     * @param int $id
-     * @return array|null
-     */
+    //Lấy bài viết theo Id
     public function getById($id)
     {
         $query = "SELECT p.*, 
@@ -185,11 +140,7 @@ class PostModel
                   LEFT JOIN categories c ON p.category_id = c.id
                   WHERE p.id = :id";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $post = $stmt->fetch();
+        $post = $this->queryOne($query, ['id' => $id]);
 
         if ($post) {
             $post['tags'] = $this->getPostTags($id);
@@ -197,12 +148,7 @@ class PostModel
 
         return $post;
     }
-
-    /**
-     * Lấy bài viết theo slug
-     * @param string $slug
-     * @return array|null
-     */
+    //Lấy bài viết theo Slug
     public function getBySlug($slug)
     {
         $query = "SELECT p.*, 
@@ -215,11 +161,7 @@ class PostModel
                   LEFT JOIN categories c ON p.category_id = c.id
                   WHERE p.slug = :slug";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':slug', $slug);
-        $stmt->execute();
-
-        $post = $stmt->fetch();
+        $post = $this->queryOne($query, ['slug' => $slug]);
 
         if ($post) {
             $this->incrementViews($post['id']);
@@ -229,17 +171,12 @@ class PostModel
         return $post;
     }
 
-    /**
-     * Lấy danh sách bài viết published có phân trang
-     * @param int $page
-     * @param int $perPage
-     * @return array
-     */
+    // Lấy danh sách bài viết published có phân trang
+
     public function getPublishedPosts($page = 1, $perPage = 10)
     {
         $offset = ($page - 1) * $perPage;
 
-        // Sửa: dùng CONCAT(u.first_name, ' ', u.last_name) thay vì u.name
         $query = "SELECT p.*, 
                          CONCAT(u.first_name, ' ', u.last_name) as author_name,
                          c.name as category_name, 
@@ -251,32 +188,22 @@ class PostModel
                   ORDER BY p.created_at DESC
                   LIMIT :limit OFFSET :offset";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['limit' => $perPage, 'offset' => $offset]);
     }
 
     /**
      * Đếm số bài viết published
-     * @return int
+   
      */
     public function countPublishedPosts()
     {
-        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE status = 'published'";
-        $stmt = $this->conn->query($query);
-        $result = $stmt->fetch();
-        return $result['total'];
+        $result = $this->queryOne("SELECT COUNT(*) as total FROM {$this->table} WHERE status = 'published'");
+        return $result ? (int)$result['total'] : 0;
     }
 
     /**
      * Lấy bài viết theo category
-     * @param int $categoryId
-     * @param int $page
-     * @param int $perPage
-     * @return array
+
      */
     public function getByCategory($categoryId, $page = 1, $perPage = 10)
     {
@@ -295,37 +222,24 @@ class PostModel
                   ORDER BY p.created_at DESC
                   LIMIT :limit OFFSET :offset";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['category_id' => $categoryId, 'limit' => $perPage, 'offset' => $offset]);
     }
 
     /**
      * Đếm bài viết theo category
-     * @param int $categoryId
-     * @return int
+ 
      */
     public function countByCategory($categoryId)
     {
-        $query = "SELECT COUNT(*) as total FROM {$this->table} 
-                  WHERE category_id = :category_id AND status = 'published'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        return $result['total'];
+        $result = $this->queryOne(
+            "SELECT COUNT(*) as total FROM {$this->table} WHERE category_id = :category_id AND status = 'published'",
+            ['category_id' => $categoryId]
+        );
+        return $result ? (int)$result['total'] : 0;
     }
 
     /**
      * Lấy bài viết theo tag
-     * @param int $tagId
-     * @param int $page
-     * @param int $perPage
-     * @return array
      */
     public function getByTag($tagId, $page = 1, $perPage = 10)
     {
@@ -343,39 +257,23 @@ class PostModel
                   ORDER BY p.created_at DESC
                   LIMIT :limit OFFSET :offset";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['tag_id' => $tagId, 'limit' => $perPage, 'offset' => $offset]);
     }
 
     /**
      * Đếm bài viết theo tag
-     * @param int $tagId
-     * @return int
      */
     public function countByTag($tagId)
     {
-        $query = "SELECT COUNT(DISTINCT p.id) as total 
-                  FROM {$this->table} p
-                  INNER JOIN post_tag pt ON p.id = pt.post_id
-                  WHERE pt.tag_id = :tag_id AND p.status = 'published'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        return $result['total'];
+        $result = $this->queryOne(
+            "SELECT COUNT(DISTINCT p.id) as total FROM {$this->table} p INNER JOIN post_tag pt ON p.id = pt.post_id WHERE pt.tag_id = :tag_id AND p.status = 'published'",
+            ['tag_id' => $tagId]
+        );
+        return $result ? (int)$result['total'] : 0;
     }
 
     /**
      * Tìm kiếm bài viết
-     * @param string $keyword
-     * @param int $page
-     * @param int $perPage
-     * @return array
      */
     public function search($keyword, $page = 1, $perPage = 10)
     {
@@ -389,224 +287,141 @@ class PostModel
                   FROM {$this->table} p
                   LEFT JOIN users u ON p.user_id = u.id
                   LEFT JOIN categories c ON p.category_id = c.id
-                  WHERE (p.title LIKE :search OR p.content LIKE :search OR p.excerpt LIKE :search)
+                  WHERE (p.title LIKE :search1 OR p.content LIKE :search2 OR p.excerpt LIKE :search3)
                   AND p.status = 'published'
                   ORDER BY p.created_at DESC
                   LIMIT :limit OFFSET :offset";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':search', $searchTerm);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, [
+            'search1' => $searchTerm,
+            'search2' => $searchTerm,
+            'search3' => $searchTerm,
+            'limit' => $perPage,
+            'offset' => $offset
+        ]);
     }
 
     /**
      * Đếm kết quả tìm kiếm
-     * @param string $keyword
-     * @return int
      */
     public function countSearch($keyword)
     {
         $searchTerm = '%' . $keyword . '%';
 
-        $query = "SELECT COUNT(*) as total FROM {$this->table} 
-                  WHERE (title LIKE :search OR content LIKE :search OR excerpt LIKE :search)
-                  AND status = 'published'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':search', $searchTerm);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        return $result['total'];
+        $result = $this->queryOne(
+            "SELECT COUNT(*) as total FROM {$this->table} WHERE (title LIKE :search1 OR content LIKE :search2 OR excerpt LIKE :search3) AND status = 'published'",
+            ['search1' => $searchTerm, 'search2' => $searchTerm, 'search3' => $searchTerm]
+        );
+        return $result ? (int)$result['total'] : 0;
     }
 
     /**
      * Lấy bài viết gần đây
-     * @param int $limit
-     * @return array
      */
     public function getRecentPosts($limit = 5)
     {
-        $query = "SELECT id, title, slug, created_at
-                  FROM {$this->table}
-                  WHERE status = 'published'
-                  ORDER BY created_at DESC
+        $query = "SELECT p.id, p.title, p.slug, p.created_at,p.status,CONCAT(u.first_name, ' ' , u.last_name) as author_name, c.name as category_name
+                  FROM posts p
+                  INNER JOIN users u ON p.user_id = u.id
+                  LEFT JOIN categories c ON p.category_id = c.id
+                  WHERE p.status = 'published'
+                  ORDER BY p.created_at DESC
                   LIMIT :limit";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['limit' => $limit]);
     }
 
-    /**
-     * Lấy bài viết của user
-     * @param int $userId
-     * @param int $page
-     * @param int $perPage
-     * @return array
-     */
-    public function getByUser($userId, $page = 1, $perPage = 10)
-    {
-        $offset = ($page - 1) * $perPage;
-
-        $query = "SELECT p.*, c.name as category_name
-                  FROM {$this->table} p
-                  LEFT JOIN categories c ON p.category_id = c.id
-                  WHERE p.user_id = :user_id
-                  ORDER BY p.created_at DESC
-                  LIMIT :limit OFFSET :offset";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
-    }
 
     /**
      * Kiểm tra slug đã tồn tại
-     * @param string $slug
-     * @param int|null $excludeId
-     * @return bool
      */
     public function slugExists($slug, $excludeId = null)
     {
         if ($excludeId) {
-            $query = "SELECT id FROM {$this->table} WHERE slug = :slug AND id != :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':slug', $slug);
-            $stmt->bindParam(':id', $excludeId, PDO::PARAM_INT);
+            $result = $this->queryOne(
+                "SELECT COUNT(*) as count FROM {$this->table} WHERE slug = :slug AND id != :id",
+                ['slug' => $slug, 'id' => $excludeId]
+            );
         } else {
-            $query = "SELECT id FROM {$this->table} WHERE slug = :slug";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':slug', $slug);
+            $result = $this->queryOne(
+                "SELECT COUNT(*) as count FROM {$this->table} WHERE slug = :slug",
+                ['slug' => $slug]
+            );
         }
 
-        $stmt->execute();
-        return $stmt->rowCount() > 0;
+        return $result && $result['count'] > 0;
     }
 
     /**
      * Lưu tags cho bài viết
-     * @param int $postId
-     * @param array $tagIds
      */
     private function saveTags($postId, $tagIds)
     {
         if (empty($tagIds)) return;
 
         $query = "INSERT INTO post_tag (post_id, tag_id) VALUES (:post_id, :tag_id)";
-        $stmt = $this->conn->prepare($query);
 
         foreach ($tagIds as $tagId) {
-            $stmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-            $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
-            $stmt->execute();
+            $this->execute($query, ['post_id' => $postId, 'tag_id' => $tagId]);
         }
     }
 
     /**
      * Xóa tất cả tags của bài viết
-     * @param int $postId
      */
     private function deletePostTags($postId)
     {
-        $query = "DELETE FROM post_tag WHERE post_id = :post_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-        $stmt->execute();
+        $this->execute("DELETE FROM post_tag WHERE post_id = :post_id", ['post_id' => $postId]);
     }
 
     /**
      * Lấy tags của bài viết
-     * @param int $postId
-     * @return array
      */
     public function getPostTags($postId)
     {
-        $query = "SELECT t.* FROM tags t
-                  INNER JOIN post_tag pt ON t.id = pt.tag_id
-                  WHERE pt.post_id = :post_id";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':post_id', $postId, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query(
+            "SELECT t.* FROM tags t INNER JOIN post_tag pt ON t.id = pt.tag_id WHERE pt.post_id = :post_id",
+            ['post_id' => $postId]
+        );
     }
 
     /**
      * Tăng lượt xem
-     * @param int $postId
      */
     private function incrementViews($postId)
     {
-        $query = "UPDATE {$this->table} SET views = views + 1 WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $postId, PDO::PARAM_INT);
-        $stmt->execute();
+        $this->execute("UPDATE {$this->table} SET views = views + 1 WHERE id = :id", ['id' => $postId]);
     }
 
     /**
      * Kiểm tra quyền sở hữu bài viết
-     * @param int $postId
-     * @param int $userId
-     * @return bool
      */
     public function isOwner($postId, $userId)
     {
-        $query = "SELECT id FROM {$this->table} WHERE id = :id AND user_id = :user_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $postId, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->rowCount() > 0;
+        return $this->exists(['id' => $postId, 'user_id' => $userId]);
     }
 
     /**
      * Count posts by conditions
-     * @param array $conditions
-     * @return int
      */
-    public function count($conditions = [])
+    public function countPosts($conditions = [])
     {
         $whereClauses = [];
         $params = [];
 
         foreach ($conditions as $key => $value) {
             $whereClauses[] = "{$key} = :{$key}";
-            $params[":{$key}"] = $value;
+            $params[$key] = $value;
         }
 
         $whereSQL = empty($whereClauses) ? '1=1' : implode(' AND ', $whereClauses);
 
-        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE {$whereSQL}";
-
-        $stmt = $this->conn->prepare($query);
-
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-
-        $stmt->execute();
-        $result = $stmt->fetch();
-
-        return (int)$result['total'];
+        $result = $this->queryOne("SELECT COUNT(*) as total FROM {$this->table} WHERE {$whereSQL}", $params);
+        return $result ? (int)$result['total'] : 0;
     }
 
     /**
      * Lấy tất cả bài viết với details (cho admin)
-     * @param int $page
-     * @param int $perPage
-     * @param string $status Filter theo status (optional)
-     * @param string $search Tìm kiếm (optional)
-     * @return array
      */
     public function getAllWithDetails($page = 1, $perPage = 20, $status = '', $search = '')
     {
@@ -647,27 +462,15 @@ class PostModel
                   ORDER BY p.created_at DESC
                   LIMIT :limit OFFSET :offset";
 
-        $stmt = $this->conn->prepare($query);
+        // Merge pagination params
+        $params[':limit'] = $perPage;
+        $params[':offset'] = $offset;
 
-        // Bind search/filter params
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-
-        // Bind pagination params
-        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, $params);
     }
 
     /**
      * Đếm tất cả bài viết với filter (cho admin)
-     * @param string $status
-     * @param string $search
-     * @return int
      */
     public function countAllWithDetails($status = '', $search = '')
     {
@@ -686,18 +489,8 @@ class PostModel
 
         $whereSQL = empty($whereClauses) ? '1=1' : implode(' AND ', $whereClauses);
 
-        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE {$whereSQL}";
-
-        $stmt = $this->conn->prepare($query);
-
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-
-        $stmt->execute();
-        $result = $stmt->fetch();
-
-        return (int)$result['total'];
+        $result = $this->queryOne("SELECT COUNT(*) as total FROM {$this->table} WHERE {$whereSQL}", $params);
+        return $result ? (int)$result['total'] : 0;
     }
     /**
      * Lấy bài viết nổi bật trong category
@@ -713,11 +506,6 @@ class PostModel
                   ORDER BY p.views DESC, p.created_at DESC
                   LIMIT :limit";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $this->query($query, ['category_id' => $categoryId, 'limit' => $limit]);
     }
 }

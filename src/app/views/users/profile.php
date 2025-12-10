@@ -9,7 +9,7 @@
             <!-- Avatar Section -->
             <div class="profile__card profile__card--avatar">
                 <div class="profile-avatar">
-                    <!-- ✅ FORM UPLOAD ĐƠN GIẢN -->
+                    <!--  FORM UPLOAD ĐƠN GIẢN -->
                     <form action="<?php echo Router::url('/profile/update-avatar'); ?>"
                         method="POST"
                         enctype="multipart/form-data"

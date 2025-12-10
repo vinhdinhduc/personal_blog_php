@@ -14,9 +14,9 @@
         <i class="fas fa-plus"></i>
         Thêm bài viết mới
     </a>
-    <button class="btn btn--success">
-        <i class="fas fa-file-export"></i>
-        Xuất Excel
+    <button class="btn btn--danger" onclick="alert('Chức năng xóa hàng loạt đang phát triển!')">
+        <i class="fas fa-trash"></i>
+        Xóa đã chọn
     </button>
 </div>
 
@@ -118,7 +118,6 @@
                                 <i class="fas fa-edit"></i>
                             </a>
 
-                            <!-- ✅ SỬA: Dùng button với onclick -->
                             <button type="button"
                                 class="btn btn--danger btn--sm"
                                 data-tooltip="Xóa"
@@ -143,46 +142,62 @@
         </tbody>
     </table>
 
+    <!-- Debug Pagination Info -->
+    <?php if (isset($pagination)): ?>
+        <!-- 
+        Debug Info:
+        Total: <?= $pagination['total'] ?>
+        Per Page: <?= $pagination['per_page'] ?>
+        Current Page: <?= $pagination['current_page'] ?>
+        Total Pages: <?= $pagination['total_pages'] ?>
+        Has Prev: <?= $pagination['has_prev'] ? 'true' : 'false' ?>
+        Has Next: <?= $pagination['has_next'] ? 'true' : 'false' ?>
+        -->
+    <?php endif; ?>
+
     <!-- Pagination -->
-    <?php if (isset($totalPages) && $totalPages > 1): ?>
+    <?php if (isset($pagination) && $pagination['total_pages'] > 1): ?>
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-top: 1px solid #eee;">
             <div style="color: var(--secondary-color);">
-                Hiển thị <?= ($currentPage - 1) * $perPage + 1 ?> -
-                <?= min($currentPage * $perPage, $totalPosts) ?>
-                trong tổng số <?= $totalPosts ?> bài viết
+                Hiển thị <?= ($pagination['current_page'] - 1) * $pagination['per_page'] + 1 ?> -
+                <?= min($pagination['current_page'] * $pagination['per_page'], $pagination['total']) ?>
+                trong tổng số <?= $pagination['total'] ?> bài viết
             </div>
             <div style="display: flex; gap: 5px;">
-                <?php if ($currentPage > 1): ?>
-                    <a href="?page=<?= $currentPage - 1 ?>" class="btn btn--sm">
+                <?php if ($pagination['has_prev']): ?>
+                    <a href="?page=<?= $pagination['current_page'] - 1 ?>" class="btn btn--sm">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 <?php endif; ?>
 
-                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                    <?php if ($i == $currentPage): ?>
+                <?php for ($i = 1; $i <= $pagination['total_pages']; $i++): ?>
+                    <?php if ($i == $pagination['current_page']): ?>
                         <button class="btn btn--primary btn--sm"><?= $i ?></button>
                     <?php else: ?>
                         <a href="?page=<?= $i ?>" class="btn btn--sm"><?= $i ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
 
-                <?php if ($currentPage < $totalPages): ?>
-                    <a href="?page=<?= $currentPage + 1 ?>" class="btn btn--sm">
+                <?php if ($pagination['has_next']): ?>
+                    <a href="?page=<?= $pagination['current_page'] + 1 ?>" class="btn btn--sm">
                         <i class="fas fa-chevron-right"></i>
                     </a>
                 <?php endif; ?>
             </div>
         </div>
+    <?php elseif (isset($pagination)): ?>
+        <div style="padding: 15px; text-align: center; color: var(--secondary-color); border-top: 1px solid #eee;">
+            Hiển thị tất cả <?= $pagination['total'] ?> bài viết (Trang <?= $pagination['current_page'] ?>/<?= $pagination['total_pages'] ?>)
+        </div>
     <?php endif; ?>
 </div>
 
-<!-- ✅ THÊM: Hidden form để delete -->
 <form id="deleteForm" method="POST" style="display: none;">
     <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
 </form>
 
 <script>
-    // ✅ THÊM: Delete function
+    // Confirm before delete
     function deletePost(postId, postTitle) {
         if (confirm(`Bạn có chắc chắn muốn xóa bài viết "${postTitle}"?\n\nHành động này không thể hoàn tác!`)) {
             const form = document.getElementById('deleteForm');
@@ -191,7 +206,7 @@
         }
     }
 
-    // Select all checkboxes
+    // Chọn tất cả checkbox
     document.getElementById('selectAll')?.addEventListener('change', function() {
         document.querySelectorAll('.post-checkbox').forEach(checkbox => {
             checkbox.checked = this.checked;

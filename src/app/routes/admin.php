@@ -58,7 +58,7 @@ function registerAdminRoutes(Router $router)
     // CATEGORIES MANAGEMENT
     // ====================
 
-    $router->get('/admin/category', function () {
+    $router->get('/admin/categories', function () {
         $controller = new CategoryController();
         $controller->categories();
     });

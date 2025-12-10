@@ -2,7 +2,6 @@
 
 /**
  * Comment Controller
- * Xử lý CRUD comments và threaded replies
  */
 
 require_once __DIR__ . '/BaseController.php';
@@ -25,20 +24,20 @@ class CommentController extends BaseController
             if ($this->isAjax()) {
                 $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
             } else {
-                Session::flash('error', 'Invalid request');
+                Toast::error('Invalid request');
                 $this->redirect($_SERVER['HTTP_REFERER'] ?? '/');
             }
             return;
         }
 
-        // Rate limiting - chống spam comment
+        // Rate limiting 
         $rateLimitKey = 'comment_' . Session::getUserId();
         if (!Security::rateLimit($rateLimitKey, 10, 300)) {
             $message = 'Bạn đang bình luận quá nhanh. Vui lòng chờ 5 phút';
             if ($this->isAjax()) {
                 $this->json(['success' => false, 'message' => $message], 429);
             } else {
-                Session::flash('error', $message);
+                Toast::error($message);
                 $this->redirect($_SERVER['HTTP_REFERER'] ?? '/');
             }
             return;
@@ -80,7 +79,7 @@ class CommentController extends BaseController
             if ($this->isAjax()) {
                 $this->json(['success' => false, 'message' => $message], 400);
             } else {
-                Session::flash('error', $message);
+                Toast::error($message);
                 $this->redirect($_SERVER['HTTP_REFERER'] ?? '/');
             }
             return;
@@ -93,13 +92,13 @@ class CommentController extends BaseController
             if ($this->isAjax()) {
                 $this->json(['success' => false, 'message' => $message], 404);
             } else {
-                Session::flash('error', $message);
+                Toast::error($message);
                 $this->redirect('/');
             }
             return;
         }
 
-        // Kiểm tra parent comment nếu có (reply)
+        // Kiểm tra parent comment nếu có 
         if ($parentId) {
             $parentComment = $commentModel->getById($parentId);
             if (!$parentComment) {
@@ -107,27 +106,27 @@ class CommentController extends BaseController
                 if ($this->isAjax()) {
                     $this->json(['success' => false, 'message' => $message], 404);
                 } else {
-                    Session::flash('error', $message);
+                    Toast::error($message);
                     $this->redirect($_SERVER['HTTP_REFERER'] ?? '/');
                 }
                 return;
             }
 
-            // Giới hạn độ sâu của comment tree (tối đa 3 cấp)
+            // Giới hạn độ sâu của comment tree 
             $depth = $commentModel->getDepth($parentId);
             if ($depth >= 2) {
                 $message = 'Không thể trả lời comment quá sâu (tối đa 3 cấp)';
                 if ($this->isAjax()) {
                     $this->json(['success' => false, 'message' => $message], 400);
                 } else {
-                    Session::flash('error', $message);
+                    Toast::error($message);
                     $this->redirect($_SERVER['HTTP_REFERER'] ?? '/');
                 }
                 return;
             }
         }
 
-        // Sanitize content
+        // Loại bỏ thẻ HTML không an toàn
         $content = Security::sanitize($content);
 
         // Auto-approve cho admin và author của bài viết
@@ -152,7 +151,6 @@ class CommentController extends BaseController
                 : 'Bình luận của bạn đang chờ phê duyệt';
 
             if ($this->isAjax()) {
-                // Return comment data for AJAX
                 $comment = $commentModel->getById($result['comment_id']);
                 $this->json([
                     'success' => true,
@@ -161,14 +159,14 @@ class CommentController extends BaseController
                     'needs_approval' => $result['needs_approval']
                 ]);
             } else {
-                Session::flash('success', $message);
+                Toast::success($message);
                 $this->redirect('/post/' . $post['slug'] . '#comment-' . $result['comment_id']);
             }
         } else {
             if ($this->isAjax()) {
                 $this->json(['success' => false, 'message' => $result['message']], 500);
             } else {
-                Session::flash('error', $result['message']);
+                Toast::error($result['message']);
                 $this->redirect($_SERVER['HTTP_REFERER'] ?? '/');
             }
         }
@@ -185,13 +183,13 @@ class CommentController extends BaseController
         $comment = $commentModel->getById($id);
 
         if (!$comment) {
-            Session::flash('error', 'Comment không tồn tại');
+            Toast::error('Comment không tồn tại');
             $this->redirect('/');
             return;
         }
 
         if (!$this->canModify($comment)) {
-            Session::flash('error', 'Bạn không có quyền sửa comment này');
+            Toast::error('Bạn không có quyền sửa comment này');
             $this->redirect('/');
             return;
         }

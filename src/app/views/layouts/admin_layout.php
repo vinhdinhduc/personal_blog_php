@@ -35,6 +35,7 @@ $needTags = $needTags ?? false;
 
     <?php if ($needUsers): ?>
         <link rel="stylesheet" href="<?php echo Router::url('css/admin/user_form.css'); ?>">
+        <link rel="stylesheet" href="<?php echo Router::url('css/admin/users.css'); ?>">
     <?php endif; ?>
     <?php if ($needTags): ?>
         <link rel="stylesheet" href="<?php echo Router::url('css/admin/tag.css'); ?>">

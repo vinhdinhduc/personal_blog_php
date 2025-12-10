@@ -33,19 +33,23 @@ class AdminController extends BaseController
     {
         // Lấy thống kê tổng quan qua Model
         $stats = [
-            'total_posts' => $this->postModel->count(),
-            'total_comments' => $this->commentModel->count(),
-            'total_users' => $this->userModel->getTotalUsers(),
-            'pending_comments' => $this->commentModel->count(['is_approved' => 0]),
-            'draft_posts' => $this->postModel->count(['status' => 'draft']),
-            'published_posts' => $this->postModel->count(['status' => 'published'])
+            "total_posts" => $this->postModel->count(),
+            "total_comments" => $this->commentModel->count(),
+            "total_users" => $this->userModel->getTotalUsers(),
+            "pending_comments" => $this->commentModel->count(["is_approved" => 0]),
+            "draft_posts" => $this->postModel->count(["status" => "draft"]),
+            "published_posts" => $this->postModel->count(["status" => "published"]),
+
+
         ];
+        $recentPosts = $this->postModel->getRecentPosts(5);
 
         // Cập nhật session với thông tin thông báo
         $_SESSION['pending_comments_count'] = $stats['pending_comments'];
 
         $this->viewWithLayout('admin/dashboard', [
             'stats' => $stats,
+            'recentPosts' => $recentPosts,
             'pageTitle' => 'Admin Dashboard',
             'csrfToken' => Security::generateCSRFToken()
         ], 'layouts/admin_layout');

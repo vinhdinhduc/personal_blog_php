@@ -1,15 +1,11 @@
 <?php
 
-/**
- * Email Configuration
- * Cấu hình email cho hệ thống
- */
-
+//Cấu hinh email cho hệ thống
 return [
-    // Email method: 'mail', 'smtp', 'sendgrid', 'mailgun'
+    // Phương thức email: 'mail', 'smtp', 'sendgrid', 'mailgun'
     'method' => 'smtp',
 
-    // From email (email gửi đi)
+    // (email gửi đi)
     'from_email' => 'noreply@blogit.com',
     'from_name' => 'BlogIT',
 
@@ -19,31 +15,31 @@ return [
     'smtp' => [
         'host' => 'smtp.gmail.com',
         'port' => 587,
-        'username' => 'vinhdd.k63cntt-a@utb.edu.vn', // Thay bằng email của bạn
-        'password' => 'crwkcebftndqyouc', // App Password từ Gmail
-        'encryption' => 'tls', // tls hoặc ssl
+        'username' => 'vinhdd.k63cntt-a@utb.edu.vn',
+        'password' => 'crwkcebftndqyouc',
+        'encryption' => 'tls',
         'auth' => true,
     ],
 
-    // SendGrid Configuration (nếu dùng SendGrid)
+
     'sendgrid' => [
         'api_key' => 'your-sendgrid-api-key',
     ],
 
-    // Mailgun Configuration (nếu dùng Mailgun)
+    // Mailg
     'mailgun' => [
         'api_key' => 'your-mailgun-api-key',
         'domain' => 'your-domain.com',
-        'endpoint' => 'api.mailgun.net', // hoặc api.eu.mailgun.net
+        'endpoint' => 'api.mailgun.net',
     ],
 
-    // Email templates path
+    // Đường dẫn đến thư mục chứa template email
     'templates_path' => __DIR__ . '/../views/emails/',
 
-    // Enable/disable email sending (để test)
+    // Kích hoạt/ vô hiệu hóa email
     'enabled' => true,
 
-    // Log emails to file instead of sending (để debug)
+    // Log email để debug
     'log_only' => false,
     'log_path' => __DIR__ . '/../logs/emails.log',
 ];

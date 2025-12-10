@@ -19,13 +19,13 @@ function registerPublicRoutes(Router $router)
         $controller->index($params['page']);
     });
 
-    // ✅ XEM TẤT CẢ BÀI VIẾT
+    //  XEM TẤT CẢ BÀI VIẾT
     $router->get('/posts', function () {
         $controller = new HomeController();
         $controller->allPosts();
     });
 
-    // ✅ TÌM KIẾM
+    //  TÌM KIẾM
     $router->get('/search', function () {
         $controller = new HomeController();
         $controller->search();

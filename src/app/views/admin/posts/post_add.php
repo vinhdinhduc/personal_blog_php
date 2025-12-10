@@ -30,10 +30,8 @@
 <?php
 
 
-// Prepare data for form component
-$post = []; // Empty array for new post
-$isEdit = false; // This is add mode
-// ✅ SỬA: Đảm bảo form action đúng
+$post = [];
+$isEdit = false;
 $formAction = Router::url("/admin/posts/store");
 $csrfToken = $csrfToken ?? Security::generateCSRFToken();
 

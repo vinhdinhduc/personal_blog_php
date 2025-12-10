@@ -1,13 +1,10 @@
-# ==================================================
-# REWRITE ENGINE
-# ==================================================
+
 
 <IfModule mod_rewrite.c>
    RewriteEngine On
    RewriteBase /personal-blog/
 
    # Ngăn truy cập trực tiếp các file thực thi trong thư mục uploads
-   # (Thay vì dùng <Directory>… trong .htaccess, dùng RewriteRule)
    RewriteRule ^uploads/.*\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|shtml|sh|cgi)$ - [F,NC,L]
 
    RewriteCond %{REQUEST_FILENAME} !-f

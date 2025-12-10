@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Email Helper - Updated with PHPMailer
- * Gửi email cho các chức năng của hệ thống
+/*
+ 
+  Gửi email cho các chức năng của hệ thống
  */
 
-// Nếu dùng PHPMailer (khuyến nghị)
+
 require_once __DIR__ . '../../../../PHPMailer/Exception.php';
 require_once __DIR__ . '../../../../PHPMailer/PHPMailer.php';
 require_once __DIR__ . '../../../../PHPMailer/SMTP.php';
@@ -19,7 +19,7 @@ class EmailHelper
     private static $config = null;
 
     /**
-     * Load email config
+     * Load file email cfig
      */
     private static function loadConfig()
     {
@@ -40,8 +40,7 @@ class EmailHelper
         return self::sendEmail($to, $subject, $message);
     }
 
-    /**
-     * Template email reset password
+    /* Mẫu email đổi mật khẩu
      */
     private static function getPasswordResetTemplate($name, $resetLink)
     {
@@ -83,7 +82,7 @@ class EmailHelper
                     </p>
                     
                     <div class='warning'>
-                        <strong>⚠️ Lưu ý:</strong>
+                        <strong> Lưu ý:</strong>
                         <ul style='margin: 10px 0; padding-left: 20px;'>
                             <li>Link này chỉ có hiệu lực trong <strong>1 giờ</strong></li>
                             <li>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này</li>
@@ -106,7 +105,7 @@ class EmailHelper
     }
 
     /**
-     * Gửi email - Main function
+     * Gửi email 
      */
     private static function sendEmail($to, $subject, $message)
     {
@@ -118,10 +117,6 @@ class EmailHelper
             return false;
         }
 
-        // Nếu chỉ log không gửi (để test)
-        if ($config['log_only']) {
-            return self::logEmail($to, $subject, $message);
-        }
 
         // Chọn method gửi email
         switch ($config['method']) {
@@ -133,15 +128,14 @@ class EmailHelper
 
             case 'mailgun':
                 return self::sendViaMailgun($to, $subject, $message);
-
-            case 'mail':
             default:
-                return self::sendViaPHPMail($to, $subject, $message);
+                error_log("Unknown email method: {$config['method']}");
+                return false;
         }
     }
 
     /**
-     * Gửi email qua SMTP (PHPMailer) - KHUYẾN NGHỊ
+     * Gửi email qua SMTP 
      */
     private static function sendViaSMTP($to, $subject, $message)
     {
@@ -150,7 +144,7 @@ class EmailHelper
 
         try {
             $mail = new PHPMailer(true);
-            $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Thêm dòng này
+            $mail->SMTPDebug = SMTP::DEBUG_SERVER;
             $mail->Debugoutput = function ($str, $level) {
                 error_log("SMTP Debug level $level: $str");
             };
@@ -192,36 +186,7 @@ class EmailHelper
         }
     }
 
-    /**
-     * Gửi email qua PHP mail() - ĐƠN GIẢN NHẤT
-     */
-    private static function sendViaPHPMail($to, $subject, $message)
-    {
-        $config = self::loadConfig();
 
-        $headers = [
-            'MIME-Version: 1.0',
-            'Content-type: text/html; charset=UTF-8',
-            'From: ' . $config['from_name'] . ' <' . $config['from_email'] . '>',
-            'Reply-To: ' . $config['reply_to'],
-            'X-Mailer: PHP/' . phpversion()
-        ];
-
-        try {
-            $result = mail($to, $subject, $message, implode("\r\n", $headers));
-
-            if ($result) {
-                error_log("Email sent successfully to: $to via PHP mail()");
-                return true;
-            } else {
-                error_log("Failed to send email to: $to via PHP mail()");
-                return false;
-            }
-        } catch (Exception $e) {
-            error_log("Email error (PHP mail): " . $e->getMessage());
-            return false;
-        }
-    }
 
     /**
      * Gửi email qua SendGrid API
@@ -301,34 +266,6 @@ class EmailHelper
         }
     }
 
-    /**
-     * Log email thay vì gửi (để test)
-     */
-    private static function logEmail($to, $subject, $message)
-    {
-        $config = self::loadConfig();
-        $logPath = $config['log_path'];
-
-        $logContent = sprintf(
-            "[%s] TO: %s | SUBJECT: %s\n%s\n%s\n",
-            date('Y-m-d H:i:s'),
-            $to,
-            $subject,
-            str_repeat('-', 80),
-            strip_tags($message)
-        );
-
-        // Tạo thư mục logs nếu chưa có
-        $logDir = dirname($logPath);
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0755, true);
-        }
-
-        file_put_contents($logPath, $logContent, FILE_APPEND);
-        error_log("Email logged to file: $to");
-
-        return true;
-    }
 
     /**
      * Gửi email chào mừng
@@ -363,17 +300,6 @@ class EmailHelper
         </body>
         </html>
         ";
-
-        return self::sendEmail($to, $subject, $message);
-    }
-
-    /**
-     * Test gửi email
-     */
-    public static function testEmail($to = 'test@example.com')
-    {
-        $subject = 'Test Email - BlogIT';
-        $message = '<h1>This is a test email</h1><p>If you receive this, email configuration is working!</p>';
 
         return self::sendEmail($to, $subject, $message);
     }

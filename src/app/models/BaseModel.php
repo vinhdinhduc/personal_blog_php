@@ -7,7 +7,6 @@
 
 require_once __DIR__ . '/../../config/database.php';
 
-
 abstract class BaseModel
 {
     protected $conn;
@@ -20,9 +19,9 @@ abstract class BaseModel
     }
 
     /**
-     * Find by ID
+     * Tìm bản ghi theo ID
      * @param int $id
-     * @param string $columns
+     * @param string $columns Các cột cần lấy
      * @return array|null
      */
     public function findById($id, $columns = '*')
@@ -31,19 +30,18 @@ abstract class BaseModel
     }
 
     /**
-     * Find one record by conditions
+     * Tìm một bản ghi theo điều kiện
      * @param array $conditions ['column' => 'value']
-     * @param string $columns
+     * @param string $columns Các cột cần lấy
      * @return array|null
      */
     public function findOne($conditions, $columns = '*')
     {
         $whereClause = $this->buildWhereClause($conditions);
         $query = "SELECT {$columns} FROM {$this->table} WHERE {$whereClause} LIMIT 1";
-
         $stmt = $this->conn->prepare($query);
 
-        // Bind WITHOUT prefix for findOne/findAll
+        // bind điều kiện
         foreach ($conditions as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
         }
@@ -54,13 +52,7 @@ abstract class BaseModel
     }
 
     /**
-     * Find all records by conditions
-     * @param array $conditions
-     * @param string $columns
-     * @param string $orderBy
-     * @param int|null $limit
-     * @param int $offset
-     * @return array
+     * Tìm tất cả bản ghi theo điều kiện
      */
     public function findAll($conditions = [], $columns = '*', $orderBy = 'id DESC', $limit = null, $offset = 0)
     {
@@ -73,7 +65,7 @@ abstract class BaseModel
 
         $stmt = $this->conn->prepare($query);
 
-        // Bind conditions
+        // Bind điều kiện
         foreach ($conditions as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
         }
@@ -89,8 +81,6 @@ abstract class BaseModel
 
     /**
      * Insert record
-     * @param array $data ['column' => 'value']
-     * @return int|false Last insert ID or false
      */
     public function insert($data)
     {
@@ -130,7 +120,7 @@ abstract class BaseModel
 
         $stmt = $this->conn->prepare($query);
 
-        // Bind data params
+        // Bind tham số data
         foreach ($data as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
         }
@@ -159,12 +149,12 @@ abstract class BaseModel
 
         $stmt = $this->conn->prepare($query);
 
-        // Bind data params with 'set_' prefix
+        // Bind tham số data với prefix 'set_'
         foreach ($data as $column => $value) {
             $stmt->bindValue(':set_' . $column, $value);
         }
 
-        // Bind condition params with 'where_' prefix
+        // Bind tham số điều kiện với prefix 'where_'
         foreach ($conditions as $column => $value) {
             $stmt->bindValue(':where_' . $column, $value);
         }
@@ -186,8 +176,8 @@ abstract class BaseModel
     }
 
     /**
-     * Delete by conditions
-     * @param array $conditions
+     * Xóa bản ghi theo điều kiện
+     * @param array $conditions Điều kiện xóa
      * @return bool
      */
     public function delete($conditions)
@@ -205,8 +195,8 @@ abstract class BaseModel
     }
 
     /**
-     * Count records
-     * @param array $conditions
+     * Đếm số lượng bản ghi
+     * @param array $conditions Điều kiện đếm
      * @return int
      */
     public function count($conditions = [])
@@ -227,8 +217,8 @@ abstract class BaseModel
     }
 
     /**
-     * Check if record exists
-     * @param array $conditions
+     * Kiểm tra bản ghi có tồn tại hay không
+     * @param array $conditions Điều kiện kiểm tra
      * @return bool
      */
     public function exists($conditions)
@@ -237,12 +227,12 @@ abstract class BaseModel
     }
 
     /**
-     * Paginate records
-     * @param int $page
-     * @param int $perPage
-     * @param array $conditions
-     * @param string $columns
-     * @param string $orderBy
+     * Lấy dữ liệu phân trang
+     * @param int $page Trang hiện tại
+     * @param int $perPage Số bản ghi mỗi trang
+     * @param array $conditions Điều kiện lọc
+     * @param string $columns Các cột cần lấy
+     * @param string $orderBy Sắp xếp
      * @return array
      */
     public function paginate($page = 1, $perPage = 10, $conditions = [], $columns = '*', $orderBy = 'id DESC')
@@ -277,10 +267,7 @@ abstract class BaseModel
     }
 
     /**
-     * Execute raw query and get single result
-     * @param string $query
-     * @param array $params
-     * @return array|null
+     * Thực thi truy vấn thô và trả về một bản ghi
      */
     protected function queryOne($query, $params = [])
     {
@@ -291,10 +278,7 @@ abstract class BaseModel
     }
 
     /**
-     * Execute raw query (INSERT/UPDATE/DELETE)
-     * @param string $query
-     * @param array $params
-     * @return bool
+     * Thực thi truy vấn thô không trả về kết quả
      */
     protected function execute($query, $params = [])
     {
@@ -304,7 +288,7 @@ abstract class BaseModel
     }
 
     /**
-     * Bind params helper
+     * Bind parameters to statement
      */
     protected function bindParams($stmt, $params = [])
     {
@@ -352,7 +336,7 @@ abstract class BaseModel
     }
 
     /**
-     * Build WHERE clause from conditions (without prefix)
+     * Build WHERE clause from conditions
      * @param array $conditions
      * @return string
      */
@@ -365,11 +349,9 @@ abstract class BaseModel
         return implode(' AND ', $clauses);
     }
 
-    /**
-     * Build WHERE clause with prefix
-     * @param array $conditions
-     * @param string $prefix
-     * @return string
+    /*
+    Build WHERE clause from conditions with prefix
+     
      */
     private function buildWhereClauseWithPrefix($conditions, $prefix = '')
     {
@@ -380,18 +362,16 @@ abstract class BaseModel
         return implode(' AND ', $clauses);
     }
 
-    /**
-     * Get last insert ID
-     * @return int
+    /*
+    Lấy ID bản ghi mới chèn cuối cùng
      */
     public function lastInsertId()
     {
         return $this->conn->lastInsertId();
     }
 
-    /**
-     * Get table name
-     * @return string
+    /*
+    Lấy tên bảng hiện tại
      */
     public function getTable()
     {

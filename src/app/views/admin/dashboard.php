@@ -21,10 +21,7 @@
                 <i class="fas fa-newspaper"></i>
             </div>
         </div>
-        <div class="card__footer">
-            <i class="fas fa-arrow-up" style="color: var(--success-color);"></i>
-            <span>12% tăng so với tháng trước</span>
-        </div>
+
     </div>
 
     <!-- Total Users -->
@@ -38,10 +35,7 @@
                 <i class="fas fa-users"></i>
             </div>
         </div>
-        <div class="card__footer">
-            <i class="fas fa-arrow-up" style="color: var(--success-color);"></i>
-            <span>8% tăng so với tháng trước</span>
-        </div>
+
     </div>
 
     <!-- Total Comments -->
@@ -55,10 +49,7 @@
                 <i class="fas fa-comments"></i>
             </div>
         </div>
-        <div class="card__footer">
-            <i class="fas fa-arrow-up" style="color: var(--success-color);"></i>
-            <span>25% tăng so với tháng trước</span>
-        </div>
+
     </div>
 
     <!-- Pending Approval -->
@@ -72,10 +63,7 @@
                 <i class="fas fa-clock"></i>
             </div>
         </div>
-        <div class="card__footer">
-            <i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i>
-            <span>Cần xử lý</span>
-        </div>
+
     </div>
 </div>
 
@@ -102,10 +90,12 @@
             </tr>
         </thead>
         <tbody>
+
             <?php if (!empty($recentPosts)): ?>
                 <?php foreach ($recentPosts as $post): ?>
                     <tr>
-                        <td><?php echo $post['id']; ?></td>
+                        <td><?php echo
+                            $post['id']; ?></td>
                         <td><?php echo htmlspecialchars($post['title']); ?></td>
                         <td><?php echo htmlspecialchars($post['author_name'] ?? 'N/A'); ?></td>
                         <td><?php echo htmlspecialchars($post['category_name'] ?? 'N/A'); ?></td>

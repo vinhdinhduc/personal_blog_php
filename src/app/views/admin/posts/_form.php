@@ -1,18 +1,10 @@
 <?php
 
-/**
- * Form Component cho Add/Edit Post
- * 
- * Variables cần truyền vào:
- * - $post: Array chứa data (hoặc empty array cho add)
- * - $isEdit: Boolean (true = edit mode, false = add mode)
- * - $categories: Array danh sách categories
- * - $tags: Array danh sách tags
- * - $formAction: String URL form action
- * - $csrfToken: String CSRF token
- */
 
-// Default values
+
+require_once __DIR__ . '/../../../helpers/ImageHelper.php';
+
+// Set giá trị mặc định
 $post = $post ?? [];
 $isEdit = $isEdit ?? false;
 $formAction = $formAction ?? '/admin/posts/store';
@@ -210,8 +202,8 @@ $formAction = $formAction ?? '/admin/posts/store';
                 <div class="image-upload">
                     <div class="image-upload__preview" id="thumbnailPreview">
                         <?php if ($isEdit && !empty($post['cover_image'])): ?>
-                            <img src="<?= htmlspecialchars($post['cover_image']) ?>"
-                                alt="cover image"
+                            <img src="<?= ImageHelper::postCover($post['cover_image']) ?>"
+                                alt="<?= htmlspecialchars($post['title'] ?? 'Cover image') ?>"
                                 class="image-upload__preview-img">
                         <?php else: ?>
                             <div class="image-upload__placeholder"
@@ -275,7 +267,7 @@ $formAction = $formAction ?? '/admin/posts/store';
             <div class="post-card__body">
                 <div class="form-group">
                     <?php
-                    // ✅ XỬ LÝ TAGS: Chuyển array thành string
+                    //  XỬ LÝ TAGS: Chuyển array thành string
                     $tagsValue = '';
                     if (isset($post['tags'])) {
                         if (is_array($post['tags'])) {
@@ -405,7 +397,7 @@ $formAction = $formAction ?? '/admin/posts/store';
     document.addEventListener('DOMContentLoaded', function() {
         console.log('=== FORM SCRIPT LOADED ===');
 
-        // ✅ KHAI BÁO TẤT CẢ BIẾN VÀ KIỂM TRA
+        //  KHAI BÁO TẤT CẢ BIẾN VÀ KIỂM TRA
         const form = document.getElementById('postForm');
         const btnSaveDraft = document.getElementById('btnSaveDraft');
         const btnPublish = document.getElementById('btnPublish');
@@ -415,7 +407,7 @@ $formAction = $formAction ?? '/admin/posts/store';
         const excerptField = document.getElementById('excerptField');
         const metaDescField = document.getElementById('metaDescription');
 
-        // ✅ KIỂM TRA CÁC ELEMENT BẮT BUỘC
+        //  KIỂM TRA CÁC ELEMENT BẮT BUỘC
         if (!form) {
             console.error('❌ Form not found!');
             return;
@@ -436,7 +428,7 @@ $formAction = $formAction ?? '/admin/posts/store';
             return;
         }
 
-        console.log('✅ All required elements found:', {
+        console.log(' All required elements found:', {
             form: !!form,
             btnSaveDraft: !!btnSaveDraft,
             btnPublish: !!btnPublish,
@@ -447,16 +439,16 @@ $formAction = $formAction ?? '/admin/posts/store';
             metaDescField: !!metaDescField
         });
 
-        // ✅ WAIT FOR QUILL EDITOR
+        //  WAIT FOR QUILL EDITOR
         function waitForQuill(callback) {
             if (window.quillEditor) {
-                console.log('✅ Quill Editor ready');
+                console.log(' Quill Editor ready');
                 callback();
             } else {
                 console.warn('⏳ Waiting for Quill Editor...');
                 setTimeout(function() {
                     if (window.quillEditor) {
-                        console.log('✅ Quill Editor ready after delay');
+                        console.log(' Quill Editor ready after delay');
                         callback();
                     } else {
                         console.error('❌ Quill Editor not initialized!');
@@ -496,7 +488,7 @@ $formAction = $formAction ?? '/admin/posts/store';
             }
         }
 
-        // ✅ Sync Quill content to hidden field
+        //  Sync Quill content to hidden field
         function syncEditorContent() {
             if (!window.quillEditor) {
                 console.error('❌ Quill Editor not available!');
@@ -511,13 +503,13 @@ $formAction = $formAction ?? '/admin/posts/store';
             const content = window.quillEditor.root.innerHTML;
             editorContent.value = content;
 
-            console.log('✅ Content synced:', content.length, 'chars');
+            console.log(' Content synced:', content.length, 'chars');
 
             updateCounters();
             return content;
         }
 
-        // ✅ Validate form
+        //  Validate form
         function validateForm() {
             console.log('=== VALIDATION START ===');
 
@@ -568,16 +560,16 @@ $formAction = $formAction ?? '/admin/posts/store';
                 return false;
             }
 
-            console.log('✅ Validation passed!');
+            console.log(' Validation passed!');
             return true;
         }
 
-        // ✅ Submit form with status
+        //  Submit form with status
         function submitForm(status) {
             console.log('=== SUBMIT START ===');
             console.log('Status:', status);
 
-            // ✅ CHECK REQUIRED FIELDS AGAIN
+            //  CHECK REQUIRED FIELDS AGAIN
             if (!statusField) {
                 console.error('❌ statusField is null');
                 alert('Lỗi hệ thống: Không tìm thấy trường trạng thái');
@@ -628,7 +620,7 @@ $formAction = $formAction ?? '/admin/posts/store';
                 console.log('Category:', categoryField.value);
             }
 
-            // ✅ Submit form
+            //  Submit form
             console.log('📤 Submitting form...');
 
             try {
@@ -641,7 +633,7 @@ $formAction = $formAction ?? '/admin/posts/store';
             }
         }
 
-        // ✅ Setup buttons after Quill is ready
+        //  Setup buttons after Quill is ready
         waitForQuill(function() {
             // Listen for input changes
             if (excerptField) {
@@ -680,7 +672,7 @@ $formAction = $formAction ?? '/admin/posts/store';
                 });
             }
 
-            console.log('✅ Form setup complete!');
+            console.log(' Form setup complete!');
         });
 
         // Warn before leaving with unsaved changes

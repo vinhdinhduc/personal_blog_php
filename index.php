@@ -3,7 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Helper: require file with existence check
+// Hàm kiểm tra và require file, nếu không tìm thấy thì log lỗi và dừng thực thi
 function requireFile(string $path)
 {
     if (!file_exists($path)) {
@@ -15,7 +15,7 @@ function requireFile(string $path)
     require_once $path;
 }
 
-// Load core files
+// Load các file cần thiết
 requireFile(__DIR__ . '/src/app/routes/route.php');
 requireFile(__DIR__ . '/src/app/helpers/Session.php');
 requireFile(__DIR__ . '/src/app/helpers/AutoLoad.php');
@@ -38,11 +38,11 @@ requireFile(__DIR__ . '/src/app/controllers/UserController.php');
 
 
 // Initialize router
-$router = new Router();
+$router = new Router(); // Nhận url và tìm route phù hợp gọi controller tương ứng
 
 // Load and register all routes
 requireFile(__DIR__ . '/src/app/routes/web.php');
 registerWebRoutes($router);
 
 // Dispatch request
-$router->dispatch();
+$router->dispatch();// Bước quan trọng :Điều huớng yêu cầu đến controller và action tương ứng

@@ -446,7 +446,7 @@ document.addEventListener("DOMContentLoaded", function () {
   setupKeyboardShortcuts();
 
   // Log trạng thái
-  console.log("✅ Tags management ready");
+  console.log(" Tags management ready");
 });
 
 // ========================================
@@ -457,4 +457,4 @@ document.addEventListener("DOMContentLoaded", function () {
 window.deleteTag = deleteTag;
 window.closeDeleteModal = closeDeleteModal;
 
-console.log("✅ admin-tags.js loaded successfully");
+console.log(" admin-tags.js loaded successfully");

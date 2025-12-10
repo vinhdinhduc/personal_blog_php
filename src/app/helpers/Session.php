@@ -75,18 +75,7 @@ class Session
     public static function flash($key, $value)
     {
         self::start();
-
-        // Debug log
-        error_log("Session::flash() called - Key: {$key}, Value: {$value}");
-        error_log("Session ID: " . session_id());
-        error_log("Flash before: " . print_r($_SESSION["flash"] ?? [], true));
-
         $_SESSION["flash"][$key] = $value;
-
-        error_log("Flash after: " . print_r($_SESSION["flash"], true));
-
-        // ✅ THÊM: Check session write
-        error_log("Session data after flash: " . print_r($_SESSION, true));
     }
 
     //Get and remove flash message
@@ -94,18 +83,12 @@ class Session
     {
         self::start();
 
-        error_log("Session::getFlash() called - Key: {$key}");
-        error_log("Available flash: " . print_r($_SESSION["flash"] ?? [], true));
-
         if (isset($_SESSION["flash"][$key])) {
             $value = $_SESSION["flash"][$key];
             unset($_SESSION["flash"][$key]);
 
-            error_log("Returning flash value: {$value}");
             return $value;
         }
-
-        error_log("No flash found for key: {$key}");
         return null;
     }
 

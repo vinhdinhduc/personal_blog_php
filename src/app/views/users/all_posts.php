@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../helpers/ImageHelper.php';
 
-// ✅ Tuân thủ MVC: Dữ liệu đã được truyền từ Controller
+//  Tuân thủ MVC: Dữ liệu đã được truyền từ Controller
 // Không truy cập trực tiếp Model trong View
 
 // Đảm bảo dữ liệu tồn tại (defensive programming)

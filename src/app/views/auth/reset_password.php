@@ -77,7 +77,7 @@ $page_title = "Đặt lại mật khẩu";
                     <span class="form-group__error" id="password_confirm-error"></span>
                 </div>
 
-                <!-- Password Strength Indicator -->
+                <!-- Độ mạnh mật khẩu -->
                 <div class="password-strength">
                     <div class="password-strength__label">Độ mạnh mật khẩu:</div>
                     <div class="password-strength__bar">
@@ -110,14 +110,14 @@ $page_title = "Đặt lại mật khẩu";
             </form>
         </div>
 
-        <!-- Decorative Elements -->
+        <!-- Các phần tử trang trí -->
         <div class="auth__decoration auth__decoration--top"></div>
         <div class="auth__decoration auth__decoration--bottom"></div>
     </div>
 </div>
 
 <style>
-    /* Additional styles for reset password page */
+    /* Thêm css */
     .auth__icon-wrapper--success {
         background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
     }

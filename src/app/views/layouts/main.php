@@ -81,12 +81,12 @@
 
     <?php include __DIR__ . '/footer.php'; ?>
 
-    <!-- Critical JS - Load on all pages -->
+
     <script src="<?php echo Router::url('js/toast.js'); ?>"></script>
     <script src="<?php echo Router::url('/js/main.js'); ?>"></script>
 
     <?php // Conditional JS loading
-    if (strpos($currentPath, '/post/') !== false):
+    if (strpos($currentPath, '/post/') !== false): //Tìm vị trị xuất hiện chuỗi /post/ trong URL
     ?>
         <script src="<?php echo Router::url('/js/post-detail.js'); ?>"></script>
         <script src="<?php echo Router::url('/js/comments.js'); ?>"></script>

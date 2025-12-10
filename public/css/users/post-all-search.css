@@ -178,12 +178,10 @@
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-/* ============================================
-   MAIN CONTENT
-   ============================================ */
+
 .all-posts-main,
 .search-main {
-    padding: 60px 0;
+       padding: 2rem 5.75rem 4rem;
 }
 
 .all-posts-main__wrapper,
